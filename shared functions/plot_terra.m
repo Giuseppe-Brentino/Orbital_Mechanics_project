@@ -14,7 +14,7 @@ GMST0 = 4.89496121282306; % Set up a rotatable globe at J2000.0
 % Earth texture image
 % Anything imread() will handle, but needs to be a 2:1 unprojected globe
 % image.
-image_file = 'http://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Land_ocean_ice_2048.jpg/1024px-Land_ocean_ice_2048.jpg';
+image_file = 'Earth.png';
 % Mean spherical earth
 erad    = 6371.0087714; % equatorial radius (meters)
 prad    = 6371.0087714; % polar radius (meters)

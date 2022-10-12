@@ -1,10 +1,6 @@
 function [r, v] = kep2car(a, e, i, OM, om, th, mu)
-% kep2car.m - Conversion from Keplerian elements to Cartesian coordinates
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% PROTOTYPE:
-% [r, v]= kep2car(a, e, i, OM, om, th, mu)
-%
-% DESCRIPTION:
 %  Conversion from Keplerian elements to Cartesian coordinates. Angles in
 %  radians
 %  
@@ -20,36 +16,44 @@ function [r, v] = kep2car(a, e, i, OM, om, th, mu)
 % OUTPUT:
 %   r   [3x1] Position vector           [km]
 %   v   [3x1] Velocity vector           [km/s]
+%
+% Contributors: 
+%   Nicolò Galletta, Virginia di Biagio Missaglia
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if nargin==6
     mu=398600.433;
 end
 
-p = a*(1-e^2);          % semilato retto [km]
-r = p/(1+e*cos(th));    % valore assoluto distanza dal pericentro [km]
+p = a*(1-e^2);          % semi-latus rectum [km]
+r = p/(1+e*cos(th));    % radius [km]
 
-% Vettore di stato s.r. perifocale(PF)
+% State vector in perifocal reference frame
 r_PF = r*[cos(th), sin(th), 0]';
 v_PF = sqrt(mu/p)*[-sin(th), e+cos(th), 0]';
 
-% Ruoto il vettore di stato nel sistema Geocentrico Equatoriale(ECI)
 
-%Partenza: ECI
-% Rotazione di OM intorno all'asse k
+%% Rotation of the state vector in the Earth Centered Equatorial Inertial Frame
+
+%Starting frame: ECEI
+% Rotation around axis k of an angle OM
 R3_OM=[cos(OM) sin(OM) 0;
       -sin(OM) cos(OM) 0;
        0       0       1];
-% Rotazione di i intorno all'asse i'= N(nodo ascendente)
+
+% Rotation around i'= N (node line) of an angle i
 R1_i=[1  0      0;
       0  cos(i) sin(i);
       0 -sin(i) cos(i)];
-% Rotazione di om intorno all'asse k'' = h
+
+% Rotation around k'' = h (angular momentum vector) of an angle om
 R3_om=[ cos(om) sin(om) 0;
        -sin(om) cos(om) 0;
         0       0       1];
-% Arrivo PF
 
-T_PF2ECI=[R3_om*R1_i*R3_OM]';     % matrice di rotazione completa PF to ECI
+% Final frame: Perifocal frame
+T_PF2ECI=[R3_om*R1_i*R3_OM]';     % Complete rotation matrix from PF to ECI
 
 r = T_PF2ECI * r_PF;      %r_ECI
 v = T_PF2ECI * v_PF;      %v_ECI
