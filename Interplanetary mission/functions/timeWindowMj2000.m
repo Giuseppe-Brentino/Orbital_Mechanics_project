@@ -14,8 +14,8 @@ t_arr_e = datetime(arrival_date_e);
 t_arr_l = datetime(arrival_date_l);
 
 
-t_dep = t_dep_e : days (1) : t_dep_l;
-t_arr = t_arr_e : days (1) : t_arr_l;
+t_dep = t_dep_e : days (60) : t_dep_l;
+t_arr = t_arr_e : days(60) : t_arr_l;
 
 dep_times = datevec(t_dep);
 arr_times = datevec(t_arr);
@@ -38,8 +38,6 @@ for i = 1 : length(arrival_times)
     arrival_times(i) = date2mjd2000(arr_times(i, :));
 
 end
-
-
 
 
 
