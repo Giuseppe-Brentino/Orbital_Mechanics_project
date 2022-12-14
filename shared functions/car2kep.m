@@ -1,78 +1,62 @@
-function [a, e, i, OM, om, th] = car2kep(r, v, settings)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function [a, e, i, OM, om, theta] = car2kep(r, v, mu)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%   Convertion from carthesian coordinates to keplerian elements
-% 
+%  Conversion from Keplerian elements to Cartesian coordinates. Angles in
+%  radians
+%
 % INPUT:
-%   r = [km]  position vector [1x3] 
-%   v = [km/s] velocity vector [1x3] 
-%   mu = [km^3/s^2] constante di gravitazione planetaria
+%   a   [1x1] Semi-major axis           [km]
+%   e   [1x1] Eccentricity              [-]
+%   i   [1x1] Inclination               [rad]
+%   OM  [1x1] RAAN                      [rad]
+%   om  [1x1] Pericentre anomaly        [rad]
+%   th  [1x1] True anomaly              [rad]
+%   mu  [1x1] Gravitational parameter   [km^3/s^2]
 %
 % OUTPUT:
-%   a =  [km]  semi-major axis  
-%   e =  [1x1] eccentricity       
-%   i =  [1x1] inclination       
-%   OM = [rad] RAAN
-%   om = [1x1] pericentre anomaly
-%   th = [rad] true anomaly
+%   r   [3x1] Position vector           [km]
+%   v   [3x1] Velocity vector           [km/s]
 %
-%   We are using ECEI (Earth Centered Equatorial Inertial Frame)
-%   Contributors:
-%   Nicolò Galletta, Virginia di Biagio Missaglia
+% Contributors:
+%   Nicolò Galletta, Virginia di Biagio Missaglia, Giuseppe Brentino,
+%   Roberto Pistone Nascone
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-mu=settings.mu;
+                                                                            % reference system unit vectors
+I = [1 0 0]';
+J = [0 1 0]';
+K = [0 0 1]';
 
-r_mod=norm(r);                                         % radius   
-v_mod=norm(v);                                         % velocity
+r_norm = norm(r);                                                           % magnitude of position vector[km]
+v_norm = norm(v);                                                           % magnitude of veocity vector [km/s]
 
-h=cross(r,v);                                          % specific angular momentum 
-h_mod=norm(h);
- 
-i=acos(h(3)/h_mod);                                    % inclination
+a = 1 / (2 / r_norm - v_norm^2 / mu);                                       % semi-major axis [km]
 
-eps=v_mod^2/2-mu/r_mod;                                % specific energy
+h_vect = cross(r,v);                                                        % specific angular momentum vector [km^2/s]
+h = norm(h_vect);
 
-a=-mu/(2*eps);                                         % major semi-axis
+e_vect = 1 / mu * ( cross(v,h_vect) - mu * r / r_norm );                    % eccentricity vector [-]
+e = norm(e_vect);
 
-if i==0                                                % if i=0, N = x_axis for convention (OM=0) 
-    N=[1,0,0];   
-else
-    N = cross([0,0,1]',h);                             % Nodal line
-end
-    N_mod = norm(N);
-    N=N/N_mod;
 
-if N(2)>=0                                             % RAAN
-    OM=acos(N(1));
-else
-    OM=2*pi-acos(N(1));
+i = acos ( dot(h_vect,K) / h );                                             % orbit's inclination [rad]
+
+n_vect = cross(K,h_vect) / norm( cross(K,h_vect) );                         % Node line
+
+OM = acos ( dot(n_vect,I) );                                                % RAAN [rad]
+if ( dot(n_vect,J) < 0 )
+    OM = 2*pi - OM;
 end
 
-e_vec = 1/mu * (cross(v,h) - r/r_mod);                 % eccentricity vector
-e=norm(e_vec);                                         % eccentricity
-
-if e==0
-    e_vec = N;
+om = acos( dot(n_vect,e_vect) / e );                                        % argument of pericentre [rad]
+if ( dot(e_vect,K) < 0 )
+    om = 2*pi - om;
 end
 
-if e_vec(3)>=0                                         % pericenter's anomaly
-    om=acos(dot(N,e_vec)/(N_mod*e));
-else 
-    om=2*pi-acos(dot(N,e_vec)/(N_mod*e));
-end
-
-
-v_r=dot(v,r)/r_mod;                                   % radial velocity
-
-
-if v_r>=0                                             % true anomaly
-    th=acos(dot(e_vec,r)/(e*r_mod));
-else 
-    th=2*pi-acos(dot(e_vec,r)/(e*r_mod));
+theta = acos( dot(r,e_vect) / ( r_norm * e ) );                             % true anomaly [rad]
+if ( dot(v,r) < 0 )
+    theta = 2*pi - theta;
 end
 
 end
- 
-
