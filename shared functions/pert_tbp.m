@@ -1,4 +1,4 @@
-function dY = pert_tbp (~,s,settings,varargin)
+function dY = pert_tbp1 (~,s,settings,Area_mass,c_d,varargin)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % ODE system to solve the two-body problem (Keplerian motion)
@@ -33,9 +33,16 @@ v = [vx vy vz]';        % velocity vector
 p = [x y z]';           % position vector
 
 mu = settings.mu;
+RE = settings.RE;
 
 r = norm(p);            % distance between the two bodies
 dv = -mu/(r^3) * p;     % accelration vector
+
+h0 = 250;                                 % initial base altitude [km]
+rho0 = 7.248 * 1e-11;                     % initial nominal density [kg/m^3]
+H = 45.546;                               % initial scale height [km]
+v_rel0 = v - cross(w_E_vect, p);          % initial relative velocity vector [km/s] 
+v_rel0_norm = norm(v_rel0);               % initial relative velocity vector's norm [km/s]
 
 if nargin == 4
     perturbations = varargin{1};
@@ -49,16 +56,15 @@ if nargin == 4
         y/r * ( 5*(z/r)^2 - 1 ); ...
         z/r * ( 5*(z/r)^2 - 3 ) ] ;
 
-% Drag perturbation
-    h = 
-    rho_0 
+    % Drag perturbation
+    h = p - RE;
+    rho = rho0 * exp(-(h-h0)/H);
+    a_drag0 = -0.5 * (Area_mass*c_d) * rho * v_rel0_norm^2 * (v_rel0/v_rel0_norm);
 
-
-    dv = dv + a_J2;
-
-
-
+    dv = dv + a_J2 + a_drag0;
 end
+
+
 dY(1:3) = v;
 dY(4:6) = dv;
 

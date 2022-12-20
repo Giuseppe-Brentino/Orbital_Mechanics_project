@@ -103,12 +103,12 @@ plot(lon_mod(end), lat_mod(end), '*', 'LineWidth', 5);
 
 %% Perturbated GT
 
-r_norm = [];
-for k = 1:size(Y, 1)
-    r_norm(k) = norm(Y(k, 1:3));
-end
-
-h = r_norm' - settings.RE;
+% r_norm = [];
+% for k = 1:size(Y, 1)
+%     r_norm(k) = norm(Y(k, 1:3));
+% end
+% 
+% h = r_norm' - settings.RE;
 
 
 
