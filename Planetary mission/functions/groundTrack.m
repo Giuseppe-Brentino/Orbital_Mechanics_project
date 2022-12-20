@@ -8,14 +8,13 @@ function [alpha, delta, lon, lat] = groundTrack (state, theta_G0, t, w_E, t_0)
 %   theta_G0 = Initial Greenwich Meridian Longitude [1x1]
 %   t = time vector from ODE [?x1] [s]
 %   w_E = Earth angular velocity [1x1] [rad/s]
-%   settings = settings to evaluate mu
 %   t_0 = initial value of time [1x1] [s]
 %
 % OUTPUT:
-%   alpha =  right ascension [1x1] [deg]
-%   delta =  declination [1x1] [deg]
-%   longitude =  [1x1] [deg]
-%   latitude = [1x1] [deg]
+%   alpha =  right ascension [?x1] [deg]
+%   delta =  declination [?x1] [deg]
+%   longitude =  [?x1] [deg]
+%   latitude = [?x1] [deg]
 %
 % Contributors: 
 %   Giuseppe Brentino, Virginia di Biagio Missaglia, Nicolò

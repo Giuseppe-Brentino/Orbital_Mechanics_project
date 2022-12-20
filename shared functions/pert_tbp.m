@@ -35,27 +35,28 @@ p = [x y z]';           % position vector
 mu = settings.mu;
 
 r = norm(p);            % distance between the two bodies
-dv = -mu/(r^3) * p;     %accelration vector
+dv = -mu/(r^3) * p;     % accelration vector
 
 if nargin == 4
     perturbations = varargin{1};
 
-    for i = 1:length(perturbations)
+    % J2 perturbation
+    J2 = settings.J2E;
+    R = settings.RE;
 
-        switch(perturbations{i})
-            case 'oblateness'
-                J2 = settings.J2E;
-                R = settings.RE;
-            
-                c = 3/2 * (J2*mu*R^2)/r^4;
-                a_J2 = c * [ x/r * ( 5*(z/r)^2 - 1 ); ...
-                             y/r * ( 5*(z/r)^2 - 1 ); ...
-                             z/r * ( 5*(z/r)^2 - 3 ) ] ;
-                
-                dv = dv + a_J2;
-        end
+    c = 3/2 * (J2*mu*R^2)/r^4;
+    a_J2 = c * [ x/r * ( 5*(z/r)^2 - 1 ); ...
+        y/r * ( 5*(z/r)^2 - 1 ); ...
+        z/r * ( 5*(z/r)^2 - 3 ) ] ;
 
-    end
+% Drag perturbation
+    h = 
+    rho_0 
+
+
+    dv = dv + a_J2;
+
+
 
 end
 dY(1:3) = v;
