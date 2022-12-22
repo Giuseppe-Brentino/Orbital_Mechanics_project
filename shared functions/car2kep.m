@@ -4,7 +4,7 @@ function [a, e, i, OM, om, theta] = car2kep(r, v, mu)
 %  Conversion from Keplerian elements to Cartesian coordinates. Angles in
 %  radians
 %
-% INPUT:
+% OUTPUT:
 %   a   [1x1] Semi-major axis           [km]
 %   e   [1x1] Eccentricity              [-]
 %   i   [1x1] Inclination               [rad]
@@ -13,7 +13,7 @@ function [a, e, i, OM, om, theta] = car2kep(r, v, mu)
 %   th  [1x1] True anomaly              [rad]
 %   mu  [1x1] Gravitational parameter   [km^3/s^2]
 %
-% OUTPUT:
+% INPUT:
 %   r   [3x1] Position vector           [km]
 %   v   [3x1] Velocity vector           [km/s]
 %

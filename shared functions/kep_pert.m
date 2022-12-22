@@ -17,7 +17,6 @@ r = p / (1 + e*cos(theta));
 h = sqrt(p * mu_E);
 v = sqrt( 2*mu_E/r - mu_E/a);
 
-
 [r_vec, v_vec] = kep2car(a, e, i, OM, om, theta, mu_E);
 a_p = a_pert(settings, r_vec, v_vec, drag);
 
@@ -27,14 +26,14 @@ h_vers = h_vec/norm(h_vec);
 n = cross(h_vers, t)/norm(cross(h_vers, t));
 
 % rotation from Cartesian to THN
-Acar2THN = [t h_vers n]';
-a_p_THN = Acar2THN * a_p;
+A_car2THN = [t n h_vers]';
+a_p_THN = A_car2THN * a_p;
 
 % rotation from THN to RSW
-ATHN2RSW = h/p/v * [e*sin(theta),     -(1 + e*cos(theta)),     0 ;
-    1 + (e*cos(theta)),     e*sin(theta),          0 ;
+A_THN2RSW = h/p/v * [e*sin(theta),     -(1 + e*cos(theta)),     0 ;
+    1 + e*cos(theta),     e*sin(theta),          0 ;
     0,                      0,                  1];
-a_p_RSW = ATHN2RSW * a_p_THN;
+a_p_RSW = A_THN2RSW * a_p_THN;
 
 a_r=a_p_RSW(1);
 a_s=a_p_RSW(2);
