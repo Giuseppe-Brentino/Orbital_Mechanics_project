@@ -37,7 +37,8 @@ perturbations = settings.perturbations;
 mu = settings.mu;
 
 if perturbations
-    a_p = a_pert(settings, p, v, drag);
+    settings.ref_sys = 'CAR';
+    a_p = a_pert(settings, [p; v], drag);
 else
     a_p = zeros(3, 1);
 end

@@ -30,12 +30,15 @@ T_10 = 10*T_24;                             % 10 days [s]
 
 %% nominal GT 
 
+t_span = 300;
+t_sample = 0:T/t_span:100*T;
+
 %T/T_24;
 [r0, v0] = kep2car(a, e, i, OM, om, theta, settings.mu);
 s0 = [r0; v0];                              % initial state vector
 settings.perturbations = false;
 options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
-[t, Y] = ode113(@pert_tbp,[0 T], s0, options, settings, drag);
+[t, Y] = ode113(@pert_tbp,t_sample, s0, options, settings, drag);
 
 t0 = 0;
 theta_G0 = 0;
@@ -67,15 +70,16 @@ legend('groundtrack', 'initial position', 'final position')
 
 
 %% Modified GT
-
 T_mod = (2*pi/settings.w_E)/GT_ratio;
 a_mod = ( settings.mu*(T_mod/(2*pi))^2 )^(1/3);
+
+t_sample_mod = 0:T_mod/t_span:100*T_mod;
 
 [r_mod, v_mod] = kep2car(a_mod, e, i, OM, om, theta, settings.mu);
 s_mod = [r_mod; v_mod];                              % initial modified state vector
 
 settings.perturbations = false;
-[t_mod, Y_mod] = ode113(@pert_tbp,[0 T_mod], s_mod, options, settings, drag);
+[t_mod, Y_mod] = ode113(@pert_tbp, t_sample_mod, s_mod, options, settings, drag);
 
 [alpha_mod, delta_mod, lon_mod, lat_mod] = groundTrack (Y_mod, theta_G0, t_mod, settings.w_E, t0);
 
@@ -101,6 +105,18 @@ ylabel('latitude [deg]')
 plot(lon_mod, lat_mod, 'r','LineWidth',1);
 plot(lon_mod(1), lat_mod(1), 'or', 'LineWidth', 1);
 plot(lon_mod(end), lat_mod(end), '*r', 'LineWidth', 1);
+legend('modified ground track', 'modified orbit initial position', ...
+    'modified orbit final position')
+
+groundTrackPlot
+title('Nominal and Modified ground track')
+xlim([-180 180]);
+ylim([-90 90]);
+xlabel('longitude [deg]')
+ylabel('latitude [deg]')
+plot(lon_mod, lat_mod, 'r','LineWidth',1);
+plot(lon_mod(1), lat_mod(1), 'or', 'LineWidth', 1);
+plot(lon_mod(end), lat_mod(end), '*r', 'LineWidth', 1);
 plot(lon, lat, 'g','LineWidth',1);
 plot(lon(1), lat(1), 'og', 'LineWidth', 1);
 plot(lon(end), lat(end), '*g', 'LineWidth', 1);
@@ -112,7 +128,7 @@ legend('modified ground track', 'modified orbit initial position', ...
 %% Perturbed GT
 
 settings.perturbations = true;
-[t_pert, Y_pert] = ode113(@pert_tbp,[0 T], s0, options, settings, drag);
+[t_pert, Y_pert] = ode113(@pert_tbp,t_sample, s0, options, settings, drag);
 
 figure()
 title('Orbit plots')
@@ -161,7 +177,7 @@ legend('perturbed gt', 'initial position', 'final position')
 %% Perturbed and Modified GT
 
 settings.perturbations = true;   
-[t_p_mod, Y_p_mod] = ode113(@pert_tbp,[0 T_mod], s_mod, options, settings, drag);
+[t_p_mod, Y_p_mod] = ode113(@pert_tbp,t_sample_mod, s_mod, options, settings, drag);
 
 [alpha_p_mod, delta_p_mod, lon_p_mod, lat_p_mod] = groundTrack (Y_p_mod, ...
     theta_G0, t_p_mod, settings.w_E, t0);
@@ -194,7 +210,7 @@ legend('perturbed and modified gt', 'initial position', 'final position')
 %% Orbit propagation with Gauss's Eqns
 
 kep0 = [a e i OM om theta];
-[t_G, kep_G] = ode113(@kep_pert, [0 T], kep0, options, settings, drag);
+[t_G, kep_G] = ode113(@kep_pert, t_sample, kep0, options, settings, drag);
 
 Y_G = zeros(size(kep_G,1), 6);
 for j = 1:size(kep_G, 1)
@@ -237,18 +253,18 @@ end
 
 kep_G(:, 6) = rad2deg(unwrap(kep_G(:, 6)));
 
+%% Filtering
+kep_f = movmean(kep_pert, t_span);
 
-t_car = t_pert;
-t_RSW = t_G;
-
+%%
 figure()
 
 subplot(3, 2, 1)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 1), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 1), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 1), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 1), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 1), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 1), 'b', 'DisplayName', 'Secular');
 title('a');
 xlabel('time [s]');
 ylabel('a [km]');
@@ -257,9 +273,9 @@ legend;
 subplot(3, 2, 2)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 2), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 2), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 2), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 2), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 2), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 2), 'b', 'DisplayName', 'Secular');
 title('e');
 xlabel('time [s]');
 ylabel('e [-]');
@@ -268,9 +284,9 @@ legend;
 subplot(3, 2, 3)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 3), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 3), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 3), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 3), 'b', 'DisplayName', 'Secular');
 title('i');
 xlabel('time [s]');
 ylabel('i [deg]');
@@ -279,9 +295,9 @@ legend;
 subplot(3, 2, 4)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 4), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 4), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 4), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 4), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 4), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 4), 'b', 'DisplayName', 'Secular');
 title('\Omega');
 xlabel('time [s]');
 ylabel('\Omega [deg]');
@@ -290,9 +306,9 @@ legend;
 subplot(3, 2, 5)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 5), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 5), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 5), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 5), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 5), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 5), 'b', 'DisplayName', 'Secular');
 title('\omega');
 xlabel('time [s]');
 ylabel('\omega [deg]');
@@ -301,18 +317,74 @@ legend;
 subplot(3, 2, 6)
 hold on;
 grid on;
-plot(t_RSW, kep_G(:, 6), 'DisplayName','Gauss Equation(RSW)');
-plot(t_car, kep_pert(:, 6), 'DisplayName','Cartesian');
-%plot(t, kep_f(:, 6), 'DisplayName', 'Secular');
+plot(t_G, kep_G(:, 6), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 6), 'DisplayName','Cartesian');
+plot(t_pert, kep_f(:, 6), 'b', 'DisplayName', 'Secular');
 title('\vartheta');
 xlabel('time [s]');
 ylabel('\vartheta [deg]');
 legend;
 
+%% Validation
+dOM_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*cos(i)/((1-e^2)^2*a^(7/2)));
+dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*(5/2*sin(i)^2-2)/((1-e^2)^2*a^(7/2)));
 
-%% TO DO
-% Omogeneizzare passo d'integrazione;
-% Scrivere aJ2 direttamente in RSW
-% Plot errori
-% Altre task
-% Plot movie
+%% Errors
+
+for j = 1:length(t_sample)
+
+    kep_G(j, 3:6) = [deg2rad(kep_G(j,3)), deg2rad(kep_G(j,4)), deg2rad(kep_G(j,5)), deg2rad(kep_G(j,6))];
+    kep_pert (j, 3:6) = [deg2rad(kep_pert(j,3)), deg2rad(kep_pert(j,4)), deg2rad(kep_pert(j,5)), deg2rad(kep_pert(j,6))]; 
+
+end
+
+% Relative errors
+err = abs(kep_pert-kep_G); 
+
+err(:, 1) = err(:,1)/kep0(1); 
+err(:, 3:5) = err(:,3:5)/(2*pi); 
+err(:, 6) = err(:,6)./kep_G(:,6); 
+
+figure()
+
+subplot(3,2,1)
+semilogy(t_sample, err(:, 1))
+title('a error');
+xlabel('time [s]');
+ylabel('a_{car} - a_{gaus} / a_0 [-]');
+grid on;
+
+subplot(3,2,2)
+semilogy(t_sample, err(:,2));
+title('e error');
+xlabel('time [s]');
+ylabel('e_{car} - e_{gauss} [-]');
+grid on;
+
+subplot(3,2,3)
+semilogy(t_sample, err(:,3));
+title('i error');
+xlabel('time [s]');
+ylabel('i_{car} - i_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,4)
+semilogy(t_sample, err(:,4));
+title('\Omega error');
+xlabel('time [s]');
+ylabel('\Omega_{car} - \Omega_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,5)
+semilogy(t_sample,err(:,5));
+title('\omega error');
+xlabel('time [s]');
+ylabel('\omega_{car} - \omega_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,6)
+semilogy(t_sample, err(:,6));
+title('\vartheta error');
+xlabel('time [s]');
+ylabel('\vartheta_{car} - \vartheta_{gauss} / \vartheta_0 [-]');
+grid on;
