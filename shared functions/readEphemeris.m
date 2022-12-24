@@ -1,7 +1,7 @@
 function [kep] = readEphemeris(filename)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% Function that  genera a matrix of orbital parameters from a file
+% Function that creates a matrix of orbital parameters from a file
 %       
 % INPUT:
 %   filename: variable of type char, it's the name of the file

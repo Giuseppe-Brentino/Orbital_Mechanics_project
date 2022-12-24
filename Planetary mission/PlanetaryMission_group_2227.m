@@ -26,12 +26,13 @@ settings.w_E = deg2rad(15.04)/3600;         % Earth's angular velocity [rad/s]
 T = 2*pi*sqrt(a^3/settings.mu);             % Period of 1 orbit [s]
 T_24 = 24*3600;                             % 1 day [s] 
 T_10 = 10*T_24;                             % 10 days [s]
+T_year = 365.25*T_24;                       % 1 year
 
 
 %% nominal GT 
 
 t_span = 300;
-t_sample = 0:T/t_span:100*T;
+t_sample = 0:T/t_span:T;
 
 %T/T_24;
 [r0, v0] = kep2car(a, e, i, OM, om, theta, settings.mu);
@@ -73,7 +74,7 @@ legend('groundtrack', 'initial position', 'final position')
 T_mod = (2*pi/settings.w_E)/GT_ratio;
 a_mod = ( settings.mu*(T_mod/(2*pi))^2 )^(1/3);
 
-t_sample_mod = 0:T_mod/t_span:100*T_mod;
+t_sample_mod = 0:T_mod/t_span:T_mod;
 
 [r_mod, v_mod] = kep2car(a_mod, e, i, OM, om, theta, settings.mu);
 s_mod = [r_mod; v_mod];                              % initial modified state vector
@@ -169,11 +170,6 @@ plot(lon_p(1), lat_p(1), 'o', 'LineWidth', 1);
 plot(lon_p(end), lat_p(end), '*', 'LineWidth', 1);
 legend('perturbed gt', 'initial position', 'final position')
 
-% IN ITALIANO: considerate le nobili origini della mamma di MATLAB,
-% osserviamo che la GT plottata ESATTAMENTE per il tempo T di un'orbita
-% restituisce una BELLISSIMA LINEA DRITTA tra penultimo e ultimo punto (non
-% c'è nulla in mezzo)
-
 %% Perturbed and Modified GT
 
 settings.perturbations = true;   
@@ -257,6 +253,7 @@ kep_G(:, 6) = rad2deg(unwrap(kep_G(:, 6)));
 kep_f = movmean(kep_pert, t_span);
 
 %%
+
 figure()
 
 subplot(3, 2, 1)
@@ -348,43 +345,141 @@ err(:, 6) = err(:,6)./kep_G(:,6);
 figure()
 
 subplot(3,2,1)
-semilogy(t_sample, err(:, 1))
+semilogy(t_sample/T, err(:, 1))
 title('a error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('a_{car} - a_{gaus} / a_0 [-]');
 grid on;
 
 subplot(3,2,2)
-semilogy(t_sample, err(:,2));
+semilogy(t_sample/T, err(:,2));
 title('e error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('e_{car} - e_{gauss} [-]');
 grid on;
 
 subplot(3,2,3)
-semilogy(t_sample, err(:,3));
+semilogy(t_sample/T, err(:,3));
 title('i error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('i_{car} - i_{gauss} / 2\pi [-]');
 grid on;
 
 subplot(3,2,4)
-semilogy(t_sample, err(:,4));
+semilogy(t_sample/T, err(:,4));
 title('\Omega error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\Omega_{car} - \Omega_{gauss} / 2\pi [-]');
 grid on;
 
 subplot(3,2,5)
-semilogy(t_sample,err(:,5));
+semilogy(t_sample/T,err(:,5));
 title('\omega error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\omega_{car} - \omega_{gauss} / 2\pi [-]');
 grid on;
 
 subplot(3,2,6)
-semilogy(t_sample, err(:,6));
+semilogy(t_sample/T, err(:,6));
 title('\vartheta error');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\vartheta_{car} - \vartheta_{gauss} / \vartheta_0 [-]');
 grid on;
+
+%% Comparison with a real S/C 
+% (RBSP A):
+% 1 38752U 12046A   22356.68464903  .00041754 -19467-6  20092-2 0  9996
+% 2 38752   9.6632 224.8380 6686770  18.4387 357.3584  3.10486121103321
+
+ephemeris = readEphemeris('RBSP_A_1min.txt');
+
+% initial data
+a_RBSP = ephemeris(1,1);                 % semi-major axis [km]
+e_RBSP = ephemeris(1,2);                 % eccentricity [-]
+i_RBSP = deg2rad(ephemeris(1,3));        % inclination [rad]
+OM_RBSP = deg2rad(ephemeris(1,4));       % RAAN [rad]
+om_RBSP = deg2rad(ephemeris(1,5));       % argument of pericentre [rad]
+theta_RBSP = deg2rad(ephemeris(1,6));    % true anomaly [rad]
+
+kep0_RBSP = [a_RBSP e_RBSP i_RBSP OM_RBSP om_RBSP theta_RBSP];
+
+drag_RBSP.c_d = 2.1;                     % drag coefficient [-]
+drag_RBSP.Area_mass = 6.64/591.6;        % ratio between reference area and mass [m^2/kg]
+
+T_RBSP = 2*pi*sqrt(a_RBSP^3/settings.mu);
+% t_RBSP = 0:1*60:T_RBSP;
+% q = length(t_RBSP);
+
+Time = 10*24*3600; % 10 days
+t_RBSP = 0:1*60:Time;
+
+options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
+[t_RBSP, kep_RBSP]=ode113(@kep_pert, t_RBSP, kep0_RBSP, options, settings, drag_RBSP);
+
+for j = 1:length(kep_RBSP)
+
+    kep_RBSP(j, 3:6) = [rad2deg(kep_RBSP(j,3)), rad2deg(kep_RBSP(j,4)), ...
+            rad2deg(kep_RBSP(j,5)), rad2deg(kep_RBSP(j,6))];  
+end
+
+figure()
+
+subplot(3, 2, 1)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 1), 'DisplayName','modelled a');
+plot(t_RBSP/T_RBSP, ephemeris(:, 1), 'DisplayName','real a');
+title('a');
+xlabel('time [T]');
+ylabel('a [km]');
+legend;
+
+subplot(3, 2, 2)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 2), 'DisplayName','modelled e');
+plot(t_RBSP/T_RBSP, ephemeris(:, 2), 'DisplayName','real e');
+title('e');
+xlabel('time [T]');
+ylabel('e [-]');
+legend;
+
+subplot(3, 2, 3)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 3), 'DisplayName','modelled i');
+plot(t_RBSP/T_RBSP, ephemeris(:, 3), 'DisplayName','real i');
+title('i');
+xlabel('time [T]');
+ylabel('i [deg]');
+legend;
+
+subplot(3, 2, 4)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 4), 'DisplayName','modelled \Omega');
+plot(t_RBSP/T_RBSP, ephemeris(:, 4), 'DisplayName','real \Omega');
+title('\Omega');
+xlabel('time [T]');
+ylabel('\Omega [deg]');
+legend;
+
+subplot(3, 2, 5)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 5), 'DisplayName','modelled \omega');
+plot(t_RBSP/T_RBSP, ephemeris(:, 5), 'DisplayName','real \omega');
+title('\omega');
+xlabel('time [T]');
+ylabel('\omega [deg]');
+legend;
+
+subplot(3, 2, 6)
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 6), 'DisplayName','modelled \vartheta');
+plot(t_RBSP/T_RBSP, ephemeris(:, 6), 'DisplayName','real \vartheta');
+title('\vartheta');
+xlabel('time [T]');
+ylabel('\vartheta [deg]');
+legend;
