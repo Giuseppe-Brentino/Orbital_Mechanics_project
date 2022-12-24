@@ -39,7 +39,7 @@ if TOF >= 0
 
 
     [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr,TOF, mu, 0, 0, 2);
-    delta_v = norm(VI - v_dep');
+    delta_v = norm(VI - v_dep') + norm(VF - v_arr');
 
 else
     delta_v = NaN;

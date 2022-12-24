@@ -1,5 +1,5 @@
 function [departure_times, arrival_times] = timeWindowMj2000...
-    (departure_date_e, departure_date_l, arrival_date_e, arrival_date_l)
+    (departure_date_e, departure_date_l, arrival_date_e, arrival_date_l, delta_t)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -14,8 +14,8 @@ t_arr_e = datetime(arrival_date_e);
 t_arr_l = datetime(arrival_date_l);
 
 
-t_dep = t_dep_e : days (30) : t_dep_l;
-t_arr = t_arr_e : days(30) : t_arr_l;
+t_dep = t_dep_e : delta_t : t_dep_l;
+t_arr = t_arr_e : delta_t : t_arr_l;
 
 dep_times = datevec(t_dep);
 arr_times = datevec(t_arr);

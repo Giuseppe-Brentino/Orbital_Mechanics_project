@@ -48,7 +48,7 @@ end
 
 
 
-%% PorkChop plot
+%% PorkChop plot Saturn-Earth
 
 figure()
 hold on;
@@ -77,24 +77,24 @@ for k = 1:size(delta_v_dep, 1)
     end
 end
 
+
 %% Saturn-NEO Leg
 
 % in italiano: stiamo considerando che metà del tempo della missione viene
 % impiegato per arrivare a S mentre la restante parte per arrivare a Neo
 % PROVARE CON FINESTRA COMPLETA ANCHE T-S 
-departure_date_e_1 = [2040, 8, 2, 0, 0, 0];
-departure_date_l_1 = [2051, 1, 28, 23, 59, 59]; 
 
+flyby_date_i = find(t_fb_logic);
+t_fb_1 = t_fb(flyby_date_i);
 
-arrival_date_e_1 = [2041, 8, 2, 0, 0, 0]; 
-arrival_date_l_1 = [2065, 1, 28, 23, 59, 59]; 
+t_arr = datetime([2065, 1, 28, 23, 59, 59]);
+t_arr = datevec(t_arr);
+t_arr = date2mjd2000(t_arr);
 
+t_arr = linspace(flyby_date(1)+365, t_arr, 150);
 
 i_dep_1 = 6;  % Saturn
 i_arr_1 = 21; % NEO
-
-[t_fb_1, t_arr] = timeWindowMj2000...
-    (departure_date_e_1, departure_date_l_1, arrival_date_e_1, arrival_date_l_1);
 
 
 m = length(t_fb_1);
@@ -125,7 +125,7 @@ for k = 1:size(delta_v_arr, 1)
         time_fb_1 = datetime(mjd20002date(t_arr(j)));
         time_dep_1 = datetime(mjd20002date(t_fb_1(k)));
 
-        if delta_v_arr(k, j) < 20 && T_par_1(k, j) < ( seconds(diff([time_dep_1; time_fb_1])) )
+        if delta_v_arr(k, j) < 3.4 && T_par_1(k, j) < ( seconds(diff([time_dep_1; time_fb_1])) )
             t_arr_logic(j) = true;
             [~, index] = min(delta_v_arr(:, j));
             t_fb_1_logic(index, j) = true;
@@ -135,18 +135,21 @@ for k = 1:size(delta_v_arr, 1)
 end
 
 
-%% Compare FB dates
+%% PorkChop plot Saturn-NEO
 
-t_compare = false(1, length(t_fb_1_logic(:, 1)));
-k = 1;
+figure()
+hold on;
+contour(t_fb_1, t_arr, delta_v_arr', [2:0.2:4], 'LineWidth',2);
+xlabel('Departure Time');
+ylabel('Arrival Time');
+colorbar();
+clim([2, 4]);
 
-for i = 1:length(t_fb_1_logic(1))
-    while t_fb_1_logic(i, k) ~= 1
-        k = k+1;
-    end
-    t_compare(k) = true;
-    
-end
+
+%% Comparison
+
+find(~all(t_fb_1_logic==0,2));
+
 
 
 
