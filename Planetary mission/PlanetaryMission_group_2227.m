@@ -6,7 +6,7 @@ addpath('../shared functions/');
 addpath('./functions/');
 
 
-% data
+%data
 a = 1.9539*1e4;             % semi-major axis [km]
 e = 0.6607;                 % eccentricity [-]
 i = deg2rad(10.4278);       % inclination [rad]
@@ -32,9 +32,8 @@ T_year = 365.25*T_24;                       % 1 year
 %% nominal GT 
 
 t_span = 300;
-t_sample = 0:T/t_span:T;
+t_sample = 0:T/t_span:T*30;
 
-%T/T_24;
 [r0, v0] = kep2car(a, e, i, OM, om, theta, settings.mu);
 s0 = [r0; v0];                              % initial state vector
 settings.perturbations = false;
@@ -240,85 +239,84 @@ for j = 1:size(Y_pert,1)
 
 end
 
-kep_pert(:, 6) = rad2deg(unwrap(kep_pert(:, 6)));
+kep_pert(:, 6) = rad2deg(kep_pert(:, 6)); %unwrap?
 
 for j = 1:length(kep_G)
 
-    kep_G(j, 3:5) = [rad2deg(kep_G(j,3)), rad2deg(kep_G(j,4)), rad2deg(kep_G(j,5))];  
+    kep_G(j, 3:6) = [rad2deg(kep_G(j,3)), rad2deg(kep_G(j,4)), rad2deg(kep_G(j,5)), rad2deg(wrapTo2Pi(kep_G(j,6)))];  
 end
 
-kep_G(:, 6) = rad2deg(unwrap(kep_G(:, 6)));
 
 %% Filtering
 kep_f = movmean(kep_pert, t_span);
 
-%%
+%% Figures
 
 figure()
 
 subplot(3, 2, 1)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 1), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 1), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 1), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 1), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 1), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 1), 'b', 'DisplayName', 'Secular');
 title('a');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('a [km]');
 legend;
 
 subplot(3, 2, 2)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 2), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 2), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 2), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 2), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 2), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 2), 'b', 'DisplayName', 'Secular');
 title('e');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('e [-]');
 legend;
 
 subplot(3, 2, 3)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 3), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 3), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 3), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 3), 'b', 'DisplayName', 'Secular');
 title('i');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('i [deg]');
 legend;
 
 subplot(3, 2, 4)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 4), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 4), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 4), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 4), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 4), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 4), 'b', 'DisplayName', 'Secular');
 title('\Omega');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\Omega [deg]');
 legend;
 
 subplot(3, 2, 5)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 5), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 5), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 5), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 5), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 5), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 5), 'b', 'DisplayName', 'Secular');
 title('\omega');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\omega [deg]');
 legend;
 
 subplot(3, 2, 6)
 hold on;
 grid on;
-plot(t_G, kep_G(:, 6), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert, kep_pert(:, 6), 'DisplayName','Cartesian');
-plot(t_pert, kep_f(:, 6), 'b', 'DisplayName', 'Secular');
+plot(t_G/T, kep_G(:, 6), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert/T, kep_pert(:, 6), 'DisplayName','Cartesian');
+plot(t_pert/T, kep_f(:, 6), 'b', 'DisplayName', 'Secular');
 title('\vartheta');
-xlabel('time [s]');
+xlabel('time [T]');
 ylabel('\vartheta [deg]');
 legend;
 
@@ -331,11 +329,10 @@ dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*(5/2*sin(i)
 for j = 1:length(t_sample)
 
     kep_G(j, 3:6) = [deg2rad(kep_G(j,3)), deg2rad(kep_G(j,4)), deg2rad(kep_G(j,5)), deg2rad(kep_G(j,6))];
-    kep_pert (j, 3:6) = [deg2rad(kep_pert(j,3)), deg2rad(kep_pert(j,4)), deg2rad(kep_pert(j,5)), deg2rad(kep_pert(j,6))]; 
+    kep_pert(j, 3:6) = [deg2rad(kep_pert(j,3)), deg2rad(kep_pert(j,4)), deg2rad(kep_pert(j,5)), deg2rad(kep_pert(j,6))]; 
 
 end
 
-% Relative errors
 err = abs(kep_pert-kep_G); 
 
 err(:, 1) = err(:,1)/kep0(1); 
@@ -402,6 +399,8 @@ om_RBSP = deg2rad(ephemeris(1,5));       % argument of pericentre [rad]
 theta_RBSP = deg2rad(ephemeris(1,6));    % true anomaly [rad]
 
 kep0_RBSP = [a_RBSP e_RBSP i_RBSP OM_RBSP om_RBSP theta_RBSP];
+[un, dos] = kep2car(a_RBSP, e_RBSP, i_RBSP, OM_RBSP, om_RBSP, theta_RBSP);
+s0_RBSP = [un; dos];
 
 drag_RBSP.c_d = 2.1;                     % drag coefficient [-]
 drag_RBSP.Area_mass = 6.64/591.6;        % ratio between reference area and mass [m^2/kg]
@@ -414,12 +413,22 @@ Time = 10*24*3600; % 10 days
 t_RBSP = 0:1*60:Time;
 
 options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
+[t_RBSP_car, Y_RBSP]=ode113(@pert_tbp, t_RBSP, s0_RBSP, options, settings, drag_RBSP);
+
+kep_RBSP_car = zeros(size(Y_RBSP));
+for j= 1:length(t_RBSP)
+    [un, dos, tres, quatros, cinq, sei] = car2kep(Y_RBSP(j,1:3), Y_RBSP(j, 4:6), settings.mu);
+    kep_RBSP_car(j, :) = [un, dos, tres, quatros, cinq, sei];
+    kep_RBSP_car(j, 3:6) = [rad2deg(kep_RBSP_car(j, 3)), rad2deg(kep_RBSP_car(j, 4)), ...
+        rad2deg(kep_RBSP_car(j, 5)), rad2deg(kep_RBSP_car(j, 6))];
+end
+
 [t_RBSP, kep_RBSP]=ode113(@kep_pert, t_RBSP, kep0_RBSP, options, settings, drag_RBSP);
 
-for j = 1:length(kep_RBSP)
+for j = 1:length(t_RBSP)
 
     kep_RBSP(j, 3:6) = [rad2deg(kep_RBSP(j,3)), rad2deg(kep_RBSP(j,4)), ...
-            rad2deg(kep_RBSP(j,5)), rad2deg(kep_RBSP(j,6))];  
+            rad2deg(kep_RBSP(j,5)), rad2deg(wrapTo2Pi(kep_RBSP(j,6)))];  
 end
 
 figure()
@@ -428,6 +437,7 @@ subplot(3, 2, 1)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 1), 'DisplayName','modelled a');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 1), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 1), 'DisplayName','real a');
 title('a');
 xlabel('time [T]');
@@ -438,6 +448,7 @@ subplot(3, 2, 2)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 2), 'DisplayName','modelled e');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 2), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 2), 'DisplayName','real e');
 title('e');
 xlabel('time [T]');
@@ -448,6 +459,7 @@ subplot(3, 2, 3)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 3), 'DisplayName','modelled i');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 3), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 3), 'DisplayName','real i');
 title('i');
 xlabel('time [T]');
@@ -458,6 +470,7 @@ subplot(3, 2, 4)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 4), 'DisplayName','modelled \Omega');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 4), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 4), 'DisplayName','real \Omega');
 title('\Omega');
 xlabel('time [T]');
@@ -468,6 +481,7 @@ subplot(3, 2, 5)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 5), 'DisplayName','modelled \omega');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 5), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 5), 'DisplayName','real \omega');
 title('\omega');
 xlabel('time [T]');
@@ -478,6 +492,74 @@ subplot(3, 2, 6)
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 6), 'DisplayName','modelled \vartheta');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 6), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 6), 'DisplayName','real \vartheta');
+title('\vartheta');
+xlabel('time [T]');
+ylabel('\vartheta [deg]');
+legend;
+
+% plot singoli
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 1), 'DisplayName','modelled a');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 1), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 1), 'DisplayName','real a');
+title('a');
+xlabel('time [T]');
+ylabel('a [km]');
+legend;
+
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 2), 'DisplayName','modelled e');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 2), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 2), 'DisplayName','real e');
+title('e');
+xlabel('time [T]');
+ylabel('e [-]');
+legend;
+
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 3), 'DisplayName','modelled i');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 3), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 3), 'DisplayName','real i');
+title('i');
+xlabel('time [T]');
+ylabel('i [deg]');
+legend;
+
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 4), 'DisplayName','modelled \Omega');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 4), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 4), 'DisplayName','real \Omega');
+title('\Omega');
+xlabel('time [T]');
+ylabel('\Omega [deg]');
+legend;
+
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 5), 'DisplayName','modelled \omega');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 5), 'DisplayName','modelled a car');
+plot(t_RBSP/T_RBSP, ephemeris(:, 5), 'DisplayName','real \omega');
+title('\omega');
+xlabel('time [T]');
+ylabel('\omega [deg]');
+legend;
+
+figure()
+hold on;
+grid on;
+plot(t_RBSP/T_RBSP, kep_RBSP(:, 6), 'DisplayName','modelled \vartheta');
+plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 6), 'DisplayName','modelled a car');
 plot(t_RBSP/T_RBSP, ephemeris(:, 6), 'DisplayName','real \vartheta');
 title('\vartheta');
 xlabel('time [T]');
