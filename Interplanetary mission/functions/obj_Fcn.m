@@ -40,8 +40,8 @@ delta_v1 = norm(VI - v_dep');
 
 [kep_arr, ~] = ephNEO( u(3), i_arr);
 
-[r_arr, v_arr] = kep2car(kep_fb(1), kep_fb(2), kep_fb(3),...
-    kep_fb(4), kep_fb(5), kep_fb(6), mu);
+[r_arr, v_arr] = kep2car(kep_arr(1), kep_arr(2), kep_arr(3),...
+    kep_arr(4), kep_arr(5), kep_arr(6), mu);
 
 %% Second heliocentric leg parameters
 
@@ -52,7 +52,34 @@ TOF = seconds(diff([time_fb; time_arr]));
 [~,~,~,~,V_after_fb,VF,~,~] = lambertMR(r_fb, r_arr,TOF, mu, 0, 0, 2);
 delta_v2 = norm(v_arr' - VF);
 
-%% Cost function
-delta_v_fb = norm(V_after_fb - V_before_fb);
+%% DeltaV flyby
 
-delta_v = delta_v1 + delta_v2 + delta_v_fb;
+mu_Sat = astroConstants(16);
+
+vinf_m = V_before_fb'-v_fb;
+vinf_p = V_after_fb'-v_fb;
+
+% Turning angle
+delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );
+
+% Radius of pericentre
+fun = @(rp) asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
+    asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta;
+R_Sat = astroConstants(26);
+
+rp = fsolve(fun, R_Sat);
+
+if rp <= R_Sat || rp > R_Sat*906.9
+    error('Unfeasible radius of pericentre for fly-by maneouvre')
+end
+
+% Powered deltaV
+
+vp_minus = sqrt(norm(vinf_m)^2+2*mu_Sat/rp);
+vp_plus = sqrt(norm(vinf_p)^2+2*mu_Sat/rp);
+
+delta_vp = abs (vp_plus - vp_minus);
+
+%% Cost function
+
+delta_v = delta_v1 + delta_v2 + delta_vp;

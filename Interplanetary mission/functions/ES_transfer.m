@@ -1,31 +1,29 @@
 function [delta_v, VF,delta_v_dep, TPAR] = ES_transfer(t_dep, t_arr, mu, i_dep, i_arr)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% ??
-%
-% INPUT:
-%   t_dep [1] departure time                                     [MJD2000]
-%   t_arr [1] arrival time                                       [MJD2000]
-%   r_dep [?, 3] position vectors corresponding at departure time   [km]
-%   r_arr [?, 3] position vectors corresponding at arrival time     [km]
-%   v1    [?, 3] matrix velocity planet 1 for each departure time  [km/s]
-%   v2 
-%   mu
-%
-% OUTPUT:
-%   delta_v [?, 1] vectors of norm of every possible delta velocity [km/s]
-%
-% Contributors:
-%   Nicolò Galletta, Roberto Pistone Nascone
-%   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%{
+INPUT:
+  t_dep [1] departure time                                     [MJD2000]
+  t_arr [1] arrival time                                       [MJD2000]
+  mu    [1] gravitational constant of the sun
+  i_dep [1] index of the departing planet to be used in the function
+            uplanet
+  i_arr [1] index of the arriving planet to be used in the function
+            uplanet
+OUTPUT:
+  delta_v [?, 1] vectors of norm of every possible delta velocity [km/s]
+
+Contributors:
+  Nicolò galletta, Roberto Pistone Nascone, Giuseppe
+  Brentino
+
+%} 
+
 
 time_arr = datetime(mjd20002date(t_arr));
 time_dep = datetime(mjd20002date(t_dep));
 
 TOF = seconds(diff([time_dep; time_arr]));
-if TOF >= 0
 
+if TOF >= 0
 
     [kep_dep, ~] = uplanet(t_dep, i_dep);
 
@@ -39,8 +37,10 @@ if TOF >= 0
 
 
     [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr,TOF, mu, 0, 0, 2);
+    
     delta_v = norm(VI - v_dep') + norm(VF - v_arr');
     delta_v_dep = norm(VI - v_dep');
+
 else
     delta_v = NaN;
     VF = NaN;
