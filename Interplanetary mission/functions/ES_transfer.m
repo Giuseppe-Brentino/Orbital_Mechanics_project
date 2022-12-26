@@ -1,4 +1,4 @@
-function [delta_v, VF, TPAR] = ES_transfer(t_dep, t_arr, mu, i_dep, i_arr)
+function [delta_v, VF,delta_v_dep, TPAR] = ES_transfer(t_dep, t_arr, mu, i_dep, i_arr)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % ??
@@ -40,11 +40,12 @@ if TOF >= 0
 
     [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr,TOF, mu, 0, 0, 2);
     delta_v = norm(VI - v_dep') + norm(VF - v_arr');
-
+    delta_v_dep = norm(VI - v_dep');
 else
     delta_v = NaN;
     VF = NaN;
     TPAR = NaN;
+    delta_v_dep = NaN;
 end
 
 

@@ -1,4 +1,4 @@
-function [delta_v, VF, TPAR] = SNEO_transfer(t_dep, t_arr, mu, i_dep, i_arr)
+function [delta_v, delta_v_arr,VI, TPAR] = SNEO_transfer(t_dep, t_arr, mu, i_dep, i_arr)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % ??
@@ -41,10 +41,12 @@ if TOF >= 0
 
     [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr,TOF, mu, 0, 0, 2);
     delta_v = norm(VI - v_dep');
+    delta_v_arr = norm(VF-v_arr);
 
 else
     delta_v = NaN;
-    VF = NaN;
+    delta_v_arr = NaN;
     TPAR = NaN;
+    VI = NaN;
 end
 
