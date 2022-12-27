@@ -30,7 +30,7 @@ S_N.departure.latest   = [2064, 1, 28, 23, 59, 59];
 S_N.arrival.earliest = [2032, 8, 2, 0, 0, 0];
 S_N.arrival.latest   = [2065, 1, 28, 23, 59, 59];
 
-delta_t = days(90); % days separating to dates in the search grid
+delta_t = days(180); % days separating to dates in the search grid
 
 [dates.flyby] = timeWindowMj2000(S_N.departure, delta_t);
 [dates.arrival] = timeWindowMj2000(S_N.arrival, delta_t);
@@ -64,7 +64,7 @@ i = 1;
         temp.time_arr = datetime(mjd20002date(dates.arrival(j)));
          temp.time_dep = datetime(mjd20002date(dates.flyby(k)));
 
-        if S_N.deltaV(k, j) < 40 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
+        if S_N.deltaV_arr(k, j) < 5 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
             
             dates.flyby_logic(k, j) = true;
 
@@ -80,13 +80,20 @@ i = 1;
 
 %% PorkChop plot Saturn-NEO
 
+for i = 1:length(dates.flyby)
+    PCPlot.flyby(i) = datetime(mjd20002date(dates.flyby(i)));
+    PCPlot.arrival(i) = datetime(mjd20002date(dates.arrival(i)));
+end
+
 figure()
 hold on;
-contour(dates.flyby, dates.arrival, S_N.deltaV_arr', 20:2:40, 'LineWidth',2); % S_N.deltaV prima era S_N.deltaV_arr
+contour(PCPlot.flyby, PCPlot.arrival, S_N.deltaV', 15:5:40, 'LineWidth',2); % S_N.deltaV prima era S_N.deltaV_arr
+xtickformat('y-mm-dd');
+ytickformat('y-mm-dd');
 xlabel('Departure Time');
 ylabel('Arrival Time');
 colorbar();
-clim([20, 40]);
+clim([15, 40]);
 
 %% Save best flyby dates and correspondent deltaV_arr
 temp.best_fb_time = find(~all(dates.flyby_logic==0,2)); % find the rows with min delta v (fb date)
@@ -126,11 +133,11 @@ end
 
 figure()
 hold on;
-contour(dates.departure, dates.flyby, E_S.deltaV_dep', 20:2:30, 'LineWidth',2);
+contour(dates.departure, dates.flyby, E_S.deltaV_dep', 20:2:40, 'LineWidth',2);
 xlabel('Departure Time');
 ylabel('Arrival Time');
 colorbar();
-clim([20, 30]);
+clim([20, 40]);
 
 %% Cheapest departure/arrival to Saturn dates 
 
@@ -141,7 +148,7 @@ for k = 1:size(E_S.deltaV_dep, 1)
         temp.time_fb = datetime(mjd20002date(dates.flyby(j)));
         temp.time_dep = datetime(mjd20002date(dates.departure(k)));
 
-        if E_S.deltaV_dep(k, j) < 25 && E_S.T_par(k, j) < ( seconds(diff([temp.time_dep; temp.time_fb] ) ) )
+        if E_S.deltaV_dep(k, j) < 35 && E_S.T_par(k, j) < ( seconds(diff([temp.time_dep; temp.time_fb] ) ) )
             E_S.data{i} = [dates.departure(k); dates.flyby(j); E_S.deltaV_dep(k,j);...
                 E_S.deltaVI(k,j); E_S.VF{k,j}'];
             i = i+1;
@@ -172,7 +179,7 @@ guess = [mission_data(1,index);mission_data(2,index);mission_data(3,index)];
 lb = guess - 180; 
 ub = guess + 180; 
  
-options = optimoptions("fmincon", 'Algorithm','sqp');
+options = optimoptions("fmincon", 'Algorithm','sqp', 'Display','none');
 [u, DeltaV_opt, ~, ~] = fmincon(@(u)obj_Fcn(u,i_dep,i_flyby,i_NEO),...
     guess, [], [], [], [], lb, ub,@(u) nonlincon(u,i_dep,i_flyby,i_NEO), options);
 
@@ -277,8 +284,8 @@ delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );
 fun = @(rp) 1e4* ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
     asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta );
 R_Sat = astroConstants(26);
-options = optimoptions('fsolve','OptimalityTolerance',1e-8);
-rp=fsolve(fun, R_Sat,options);
+opt = optimset('Display','off', 'TolFun',1e-8);
+rp=fsolve(fun, R_Sat,opt);
 
 if rp <= R_Sat || rp > R_Sat*906.9
     error('Unfeasible radius of pericentre for fly-by maneouvre')
@@ -318,7 +325,7 @@ options = odeset('RelTol', 1e-10,'AbsTol',1e-11,'Events', @event_SOI );
 [tf, Yf] = ode113(@pert_tbp,[0 tof], s1_f,options,settings,SOI);
 
 % total flyby duration
-flyby_duration = ( ti(end)+tf(end) ) / 3600 /24
+flyby_duration = ( tof-ti(end)+tf(end) ) / 3600 /24;
 figure()
 hold on;
 grid on;
