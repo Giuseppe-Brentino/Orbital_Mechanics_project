@@ -1,4 +1,4 @@
-function a_p = a_pert(settings, car_kep, drag)
+function [a_p, a_J2, a_drag] = a_pert(settings, car_kep, drag)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % 

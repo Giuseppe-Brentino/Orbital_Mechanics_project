@@ -388,9 +388,9 @@ grid on;
 % 1 38752U 12046A   22356.68464903  .00041754 -19467-6  20092-2 0  9996
 % 2 38752   9.6632 224.8380 6686770  18.4387 357.3584  3.10486121103321
 
-ephemeris = readEphemeris('RBSP_A_1min.txt');
+ephemeris = readEphemeris('RBSP_A_10day_1min.txt');
 
-% initial data
+% initial data)
 a_RBSP = ephemeris(1,1);                 % semi-major axis [km]
 e_RBSP = ephemeris(1,2);                 % eccentricity [-]
 i_RBSP = deg2rad(ephemeris(1,3));        % inclination [rad]
@@ -413,6 +413,7 @@ Time = 10*24*3600; % 10 days
 t_RBSP = 0:1*60:Time;
 
 options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
+settings.perturbations = true;
 [t_RBSP_car, Y_RBSP]=ode113(@pert_tbp, t_RBSP, s0_RBSP, options, settings, drag_RBSP);
 
 kep_RBSP_car = zeros(size(Y_RBSP));
