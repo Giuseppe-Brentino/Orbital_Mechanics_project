@@ -64,12 +64,12 @@ i = 1;
         temp.time_arr = datetime(mjd20002date(dates.arrival(j)));
          temp.time_dep = datetime(mjd20002date(dates.flyby(k)));
 
-        if S_N.deltaV_arr(k, j) < 25 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
+        if S_N.deltaV(k, j) < 40 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
             
             dates.flyby_logic(k, j) = true;
 
             S_N.data{i} = [dates.flyby(k); dates.arrival(j);...
-                S_N.deltaV_arr(k,j); S_N.VI{k,j}'; S_N.deltaV_dep{k,j} ];
+                S_N.deltaV(k,j); S_N.VI{k,j}'; S_N.deltaV_dep{k,j} ];
 
             i = i+1;
 
@@ -172,27 +172,62 @@ guess = [mission_data(1,index);mission_data(2,index);mission_data(3,index)];
 lb = guess - 180; 
 ub = guess + 180; 
  
-options = optimoptions("fmincon", "Display","iter",'Algorithm','sqp');
+options = optimoptions("fmincon", 'Algorithm','sqp');
 [u, DeltaV_opt, ~, ~] = fmincon(@(u)obj_Fcn(u,i_dep,i_flyby,i_NEO),...
     guess, [], [], [], [], lb, ub,@(u) nonlincon(u,i_dep,i_flyby,i_NEO), options);
 
-dates.departure = guess(1);
-dates.flyby  = guess(2);
-dates.arrival = guess(3);
+dates.departure = u(1);
+dates.flyby  = u(2);
+dates.arrival = u(3);
 
 %% Heliocentric trajectory plot
 
-  [plot.kep_sat, ~] = uplanet(dates.flyby, i_flyby);
-  [plot.r_sat, ~] = kep2car(plot.kep_sat(1),plot.kep_sat(2),plot.kep_sat(3),...
-      plot.kep_sat(4),plot.kep_sat(5),plot.kep_sat(6),mu_Sun);
+[plot.kep_sat, ~] = uplanet(dates.flyby, i_flyby);
+[plot.r_sat, ~] = kep2car(plot.kep_sat(1),plot.kep_sat(2),plot.kep_sat(3),...
+    plot.kep_sat(4),plot.kep_sat(5),plot.kep_sat(6),mu_Sun);
 
-    [plot.kep_earth, ~] = uplanet(dates.departure, i_dep);
-    [plot.r_earth, ~] = kep2car(plot.kep_earth(1),plot.kep_earth(2),plot.kep_earth(3),...
-      plot.kep_earth(4),plot.kep_earth(5),plot.kep_earth(6),mu_Sun);
+[plot.kep_earth, ~] = uplanet(dates.departure, i_dep);
+[plot.r_earth, ~] = kep2car(plot.kep_earth(1),plot.kep_earth(2),plot.kep_earth(3),...
+    plot.kep_earth(4),plot.kep_earth(5),plot.kep_earth(6),mu_Sun);
 
-    [plot.kep_NEO, ~] = uplanet(dates.arrival, i_arr);
-    [plot.r_NEO, ~] = kep2car(plot.kep_NEO(1),plot.kep_NEO(2),plot.kep_NEO(3),...
-      plot.kep_NEO(4),plot.kep_NEO(5),plot.kep_NEO(6),mu_Sun);
+[plot.kep_NEO, ~] = ephNEO(dates.arrival, i_NEO);
+[plot.r_NEO, ~] = kep2car(plot.kep_NEO(1),plot.kep_NEO(2),plot.kep_NEO(3),...
+    plot.kep_NEO(4),plot.kep_NEO(5),plot.kep_NEO(6),mu_Sun);
+
+dates.dep = datetime(mjd20002date(dates.departure));
+dates.fb = datetime(mjd20002date(dates.flyby));
+dates.arr = datetime(mjd20002date(dates.arrival));
+
+E_S.TOF = seconds(diff([dates.dep; dates.fb]));
+S_N.TOF = seconds(diff([dates.fb; dates.arr]));
+
+
+[~,~,~,~,plot.VI_e,~,~,~] = lambertMR(plot.r_earth, plot.r_sat,E_S.TOF, mu_Sun, 0, 0, 2);
+[~,~,~,~,plot.VI_s,~,~,~] = lambertMR(plot.r_sat, plot.r_NEO,S_N.TOF, mu_Sun, 0, 0, 2);
+
+plot.s0_e = [plot.r_earth; plot.VI_e'];
+plot.s0_s = [plot.r_sat; plot.VI_s'];
+
+settings.perturbations = false;
+settings.mu = mu_Sun;
+options = odeset('RelTol', 1e-10,'AbsTol',1e-11);
+
+[t_e, Y_e] = ode113(@pert_tbp, [0 E_S.TOF], plot.s0_e, options, settings);
+[t_s, Y_s] = ode113(@pert_tbp, [0 S_N.TOF], plot.s0_s, options, settings);
+
+
+figure('Name', 'Lambert')
+hold on
+plot3( Y_e(:, 1), Y_e(:, 2), Y_e(:, 3), '-')
+plot3( Y_s(:, 1), Y_s(:, 2), Y_s(:, 3), '-')
+plot3(plot.r_earth(1), plot.r_earth(2), plot.r_earth(3), '.', 'MarkerSize', 20);
+plot3(plot.r_sat(1), plot.r_sat(2), plot.r_sat(3), '.', 'MarkerSize', 20);
+plot3(plot.r_NEO(1), plot.r_NEO(2), plot.r_NEO(3),'.', 'MarkerSize', 20);
+xlabel('X [km]'); ylabel('Y [km]'); zlabel('Z [km]');
+title('Transfer Orbit with Lambert Algorithm')
+axis equal;
+grid on;
+
     
 %% Saturn Fly-by
 
@@ -268,6 +303,7 @@ vp_plus = sqrt(norm(vinf_p)^2+2*mu_Sat/norm(rp));
 
 delta_vp = abs (vp_plus - vp_minus);
 
+
 %% Hyperbolic trajectory plot
 
 tof=1e9;
@@ -292,6 +328,7 @@ plot3(Yf(:, 1), Yf(:, 2), Yf(:, 3), 'LineWidth',2);
 
 opt.Units = 'km';
 planet3D('Saturn',opt);
+
 
 
 

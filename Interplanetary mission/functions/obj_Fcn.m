@@ -67,7 +67,7 @@ fun = @(rp) 1e4* ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
     asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta );
 R_Sat = astroConstants(26);
 
-opt = optimoptions('fsolve','OptimalityTolerance',1e-8);
+opt = optimoptions('fsolve','OptimalityTolerance',1e-8, 'Display','off');
 rp = fsolve(fun, R_Sat,opt);
 
 % Powered deltaV
