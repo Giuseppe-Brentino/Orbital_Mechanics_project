@@ -63,15 +63,12 @@ vinf_p = V_after_fb'-v_fb;
 delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );
 
 % Radius of pericentre
-fun = @(rp) asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
-    asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta;
+fun = @(rp) 1e4* ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
+    asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta );
 R_Sat = astroConstants(26);
 
-rp = fsolve(fun, R_Sat);
-
-if rp <= R_Sat || rp > R_Sat*906.9
-    error('Unfeasible radius of pericentre for fly-by maneouvre')
-end
+opt = optimoptions('fsolve','OptimalityTolerance',1e-8);
+rp = fsolve(fun, R_Sat,opt);
 
 % Powered deltaV
 
