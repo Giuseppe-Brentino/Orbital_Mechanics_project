@@ -1,3 +1,15 @@
+% DESCRIPTION:
+% Call this function in order to plot Earth as background of the
+% groundtrack plots
+%
+% USE:
+% Just call the function
+%
+% EARTH's IMAGE FROM: 
+% Reto Stöckli, NASA Earth Observatory, Blue Marble Next Generation
+% website: https://visibleearth.nasa.gov
+%--------------------------------------------------------------------------
+
 figure()
 hold on;
 grid on;

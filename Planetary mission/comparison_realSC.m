@@ -15,7 +15,7 @@ settings.J2E = astroConstants(9);           % Earth oblateness parameter [-]
 settings.RE = astroConstants(23);           % Earth radius [km]
 settings.w_E = deg2rad(15.04)/3600;         % Earth's angular velocity [rad/s]
 
-ephemeris = readEphemeris('RBSP_A_10day_1min.txt');
+ephemeris = readEphemeris('RBSP_A_10d_1min.txt');
 
 % initial data)
 a_SC = ephemeris(1,1);                 % semi-major axis [km]
@@ -32,8 +32,8 @@ s0_SC = [un; dos];
 drag_SC.c_d = 2.1;                     % drag coefficient [-]
 
 % ratio between reference area and mass [m^2/kg]
-% drag_SC.Area_mass = 6.64 /591.6; % RBSP_A 
-drag_SC.Area_mass = 0.3142/28.7; % vesselSat
+drag_SC.Area_mass = 6.64 /591.6; % RBSP_A 
+% drag_SC.Area_mass = 0.3142/28.7; % vesselSat
 % drag_SC.Area_mass = 0.6636/104; % ov1
 % drag_SC.Area_mass = 0.817/78.5; % ops1427
 
@@ -54,41 +54,41 @@ for j= 1:length(t_SC_car)
         rad2deg(kep_SC_car(j, 5)), rad2deg(kep_SC_car(j, 6))];
 end
 
-[t_SC_kep, kep_SC]=ode113(@kep_pert, [0 Time], kep0_SC, options, settings, drag_SC);
+[t_SC_kep, kep_SC]=ode113(@GaussEq_rsw, [0 Time], kep0_SC, options, settings, drag_SC);
 
-%% Accelerations
-settings.ref_sys = 'RSW';
-
-a_p=zeros(3,length(t_SC_kep));
-a_J2=zeros(3,length(t_SC_kep));
-a_drag=zeros(3,length(t_SC_kep));
-r = zeros(length(t_SC_kep), 1);
-
-for j=1:length(t_SC_kep)
-    r(j) = norm(kep2car(kep_SC(j,1), kep_SC(j,2), kep_SC(j,3), kep_SC(j,4), kep_SC(j,5), kep_SC(j,6)));
-    [a_p(:,j), a_J2(:,j), a_drag(:,j)] = a_pert(settings, kep_SC(j,:), drag_SC);
-end
-
-r = r -settings.RE;
-
-figure()
-plot(t_SC_kep, r)
-
-figure()
-plot(t_SC_kep, a_J2(1, :), t_SC_kep, a_J2(2, :), t_SC_kep, a_J2(3, :))
-legend('a_{J2} r', 'a_{J2} s', 'a_{J2} w')
-
-figure()
-plot(r, a_p(1, :), r, a_p(2, :), r, a_p(3, :))
-legend('a_p r', 'a_p s', 'a_p w')
-
-figure()
-plot(r, a_J2(1, :), r, a_J2(2, :), r, a_J2(3, :))
-legend('a_{J2} r', 'a_{J2} s', 'a_{J2} w')
-
-figure()
-plot(r, a_drag(1, :), r, a_drag(2, :), r, a_drag(3, :))
-legend('a_{drag} r', 'a_{drag} s', 'a_{drag} w')
+% %% Accelerations
+% settings.ref_sys = 'RSW';
+% 
+% a_p=zeros(3,length(t_SC_kep));
+% a_J2=zeros(3,length(t_SC_kep));
+% a_drag=zeros(3,length(t_SC_kep));
+% r = zeros(length(t_SC_kep), 1);
+% 
+% for j=1:length(t_SC_kep)
+%     r(j) = norm(kep2car(kep_SC(j,1), kep_SC(j,2), kep_SC(j,3), kep_SC(j,4), kep_SC(j,5), kep_SC(j,6)));
+%     [a_p(:,j), a_J2(:,j), a_drag(:,j)] = a_pert(settings, kep_SC(j,:), drag_SC);
+% end
+% 
+% r = r -settings.RE;
+% 
+% figure()
+% plot(t_SC_kep, r)
+% 
+% figure()
+% plot(t_SC_kep, a_J2(1, :), t_SC_kep, a_J2(2, :), t_SC_kep, a_J2(3, :))
+% legend('a_{J2} r', 'a_{J2} s', 'a_{J2} w')
+% 
+% figure()
+% plot(r, a_p(1, :), r, a_p(2, :), r, a_p(3, :))
+% legend('a_p r', 'a_p s', 'a_p w')
+% 
+% figure()
+% plot(r, a_J2(1, :), r, a_J2(2, :), r, a_J2(3, :))
+% legend('a_{J2} r', 'a_{J2} s', 'a_{J2} w')
+% 
+% figure()
+% plot(r, a_drag(1, :), r, a_drag(2, :), r, a_drag(3, :))
+% legend('a_{drag} r', 'a_{drag} s', 'a_{drag} w')
 
 
 %% Subplot

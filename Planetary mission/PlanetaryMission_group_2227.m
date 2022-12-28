@@ -42,7 +42,7 @@ options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
 
 t0 = 0;
 theta_G0 = 0;
-[alpha, delta, lon, lat] = groundTrack (Y, theta_G0, t, settings.w_E, t0);
+[lon, lat] = groundTrack (Y, theta_G0, t, settings.w_E, t0);
 
 for j = 2:length(lon)
     if lon(j-1)*lon(j) < 0 && abs(lon(j)) > 10
@@ -81,7 +81,7 @@ s_mod = [r_mod; v_mod];                              % initial modified state ve
 settings.perturbations = false;
 [t_mod, Y_mod] = ode113(@pert_tbp, t_sample_mod, s_mod, options, settings, drag);
 
-[alpha_mod, delta_mod, lon_mod, lat_mod] = groundTrack (Y_mod, theta_G0, t_mod, settings.w_E, t0);
+[lon_mod, lat_mod] = groundTrack (Y_mod, theta_G0, t_mod, settings.w_E, t0);
 
 for j = 2:length(lon_mod)
     if lon_mod(j-1)*lon_mod(j) < 0 && abs(lon_mod(j)) > 10
@@ -142,7 +142,7 @@ plot_terra;
 plot3(Y(:, 1), Y(:, 2), Y(:, 3), 'DisplayName', 'Nominal orbit');
 plot3(Y_pert(:, 1), Y_pert(:, 2), Y_pert(:, 3), 'DisplayName', 'Perturbed orbit');
 
-[alpha_p, delta_p, lon_p, lat_p] = groundTrack (Y_pert, theta_G0, t_pert, settings.w_E, t0);
+[lon_p, lat_p] = groundTrack (Y_pert, theta_G0, t_pert, settings.w_E, t0);
 
 for j = 2:length(lon_p)
     if lon_p(j-1)*lon_p(j) < 0 && abs(lon_p(j)) > 10
@@ -174,8 +174,7 @@ legend('perturbed gt', 'initial position', 'final position')
 settings.perturbations = true;   
 [t_p_mod, Y_p_mod] = ode113(@pert_tbp,t_sample_mod, s_mod, options, settings, drag);
 
-[alpha_p_mod, delta_p_mod, lon_p_mod, lat_p_mod] = groundTrack (Y_p_mod, ...
-    theta_G0, t_p_mod, settings.w_E, t0);
+[lon_p_mod, lat_p_mod] = groundTrack (Y_p_mod, theta_G0, t_p_mod, settings.w_E, t0);
 
 for j = 2:length(lon_p_mod)
     if lon_p_mod(j-1)*lon_p_mod(j) < 0 && abs(lon_p_mod(j)) > 10
@@ -205,7 +204,7 @@ legend('perturbed and modified gt', 'initial position', 'final position')
 %% Orbit propagation with Gauss's Eqns
 
 kep0 = [a e i OM om theta];
-[t_G, kep_G] = ode113(@kep_pert, t_sample, kep0, options, settings, drag);
+[t_G, kep_G] = ode113(@GaussEq_rsw, t_sample, kep0, options, settings, drag);
 
 Y_G = zeros(size(kep_G,1), 6);
 for j = 1:size(kep_G, 1)
@@ -388,7 +387,7 @@ grid on;
 % 1 38752U 12046A   22356.68464903  .00041754 -19467-6  20092-2 0  9996
 % 2 38752   9.6632 224.8380 6686770  18.4387 357.3584  3.10486121103321
 
-ephemeris = readEphemeris('RBSP_A_10day_1min.txt');
+ephemeris = readEphemeris('RBSP_A_10d_1min.txt');
 
 % initial data)
 a_RBSP = ephemeris(1,1);                 % semi-major axis [km]
@@ -424,7 +423,7 @@ for j= 1:length(t_RBSP)
         rad2deg(kep_RBSP_car(j, 5)), rad2deg(kep_RBSP_car(j, 6))];
 end
 
-[t_RBSP, kep_RBSP]=ode113(@kep_pert, t_RBSP, kep0_RBSP, options, settings, drag_RBSP);
+[t_RBSP, kep_RBSP]=ode113(@GaussEq_rsw, t_RBSP, kep0_RBSP, options, settings, drag_RBSP);
 
 for j = 1:length(t_RBSP)
 
