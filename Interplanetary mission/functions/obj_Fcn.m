@@ -77,12 +77,12 @@ vinf_p = V_after_fb'-v_fb;
 delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );
 
 % Radius of pericentre
-fun = @(rp) 1e4* ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
+fun = @(rp) ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
     asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta );
 R_Sat = astroConstants(26);
 
 
-opt = optimset('Display','none', 'TolFun',1e-8);
+opt = optimset('Display','on', 'TolFun',1e-12);
 rp = fsolve(fun, R_Sat,opt);
 
 % Powered deltaV
