@@ -1,4 +1,34 @@
 function [C,Ceq] = nonlincon(u,i_dep,i_fb,i_arr)
+%
+% DESCRIPTION:
+%   The function gives as output the non-linear constraints for the fmincon
+%   solver in order to minimize the delta velocity function. It takes into
+%   account the fact that the position vector at the pericentre of the
+%   flyby hyperbola needs to be: larger than the radius of the flyby planet  
+%   and smaller than Saturn's SOI. 
+%
+%  INPUT :
+%   u[3x1]      Departure, flyby and arrival dates          [MJD2000]
+%   i_dep[1]    Index of the departing planet to be used in the function
+%               uplanet
+%   i_fb[1]     Index of the flyby planet to be used in the function
+%               uplanet
+%   i_arr[1]    Index of the arriving planet to be used in the function
+%               ephNEO
+%
+%  OUTPUT:
+%	Ceq[]       Vector containing all the non-linear equality constraints 
+%   C[2x1]      Vector containing the two constraints regarding the
+%               position vector at the pericenter               [km]
+%
+%  FUNCTIONS CALLED:
+%   uplanet.m, kep2car.m, mjd20002date.m, ephNEO.m, lambertMR.m 
+%
+% AUTHORS:
+%   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
+%   Brentino, Nicolò Galletta
+%
+% -------------------------------------------------------------------------
 
 Ceq = [];
 
@@ -42,8 +72,8 @@ TOF = seconds(diff([time_fb; time_arr]));
 
 mu_Sat = astroConstants(16);
 
-vinf_m = V_before_fb'-v_fb;
-vinf_p = V_after_fb'-v_fb;
+vinf_m = V_before_fb' - v_fb;
+vinf_p = V_after_fb' - v_fb;
 
 % Turning angle
 delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );

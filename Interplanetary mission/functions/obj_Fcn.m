@@ -1,18 +1,32 @@
 function [delta_v] = obj_Fcn(u,i_dep,i_fb,i_arr)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% ??
+% DESCRIPTION:
+%   The function gives as output the object function to be minimized by the
+%   fmincon solver.
 %
-% INPUT:
-%   u [3x1] departure, flyby and arrival dates  [MJD2000]
+%  INPUT :
+%   u[3x1]      Departure, flyby and arrival dates          [MJD2000]
+%   i_dep[1]    Index of the departing planet to be used in the function
+%               uplanet
+%   i_fb[1]     Index of the flyby planet to be used in the function
+%               uplanet
+%   i_arr[1]    Index of the arriving planet to be used in the function
+%               ephNEO
 %
-% OUTPUT:
-%   delta_v [1] total delta v for the mission [km/s]
+%  OUTPUT:
+%	delta_v[1]  Sum of three delta velocity: the one needed to perform the 
+%               injection manoeuvre, the second one needed to perform the 
+%               powered flyby and the third one to perform the arrival
+%               manoeuvre.                                          [km/s]
 %
-% Contributors:
-%   Nicolò Galletta, Roberto Pistone Nascone, Giuseppe Brentino
-%   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  FUNCTIONS CALLED:
+%   uplanet.m, kep2car.m, mjd20002date.m, ephNEO.m, lambertMR.m 
+%
+% AUTHORS:
+%   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
+%   Brentino, Nicolò Galletta
+%
+% -------------------------------------------------------------------------
 
 %% Earth data
 [kep_dep, mu] = uplanet(u(1), i_dep);

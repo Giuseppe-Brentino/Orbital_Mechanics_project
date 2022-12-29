@@ -1,22 +1,38 @@
-function [delta_v_arr,delta_v_dep,VI, TPAR] = SNEO_transfer(t_dep, t_arr, mu, i_dep, i_arr)
-%{
-INPUT:
-  t_dep [1] departure time                                     [MJD2000]
-  t_arr [1] arrival time                                       [MJD2000]
-  mu    [1] gravitational constant of the sun
-  i_dep [1] index of the departing planet to be used in the function
-            uplanet
-  i_arr [1] index of the arriving asteroid to be used in the function
-            ephNEO
-OUTPUT:
-  delta_v [?, 1] vectors of norm of every possible delta velocity [km/s]
-
-Contributors:
-  Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-  Brentino
-
-%} 
-
+function [delta_v_arr,delta_v_dep,VI,TPAR] = SNEO_transfer(t_dep, t_arr, mu, i_dep, i_arr)
+%
+% PROTOTYPE:
+%  [delta_v_arr,delta_v_dep,VI,TPAR] = SNEO_transfer(t_dep, t_arr, mu,
+%  i_dep, i_arr);
+%
+% DESCRIPTION:
+%   The function computes the delta velocity needed: to perform the
+%   injection manoeuvre (from initial orbit around Saturn to the Transfer
+%   arc) and the arrival manoeuvre (from the Transfer arc to the final
+%   orbit around the designed asteroid).
+%
+%  INPUT :
+%	t_dep[1]    Departure time                              [MJD2000]
+%	t_arr[1]    Arrival time                                [MJD2000]
+%   mu[1]       Gravitational constant of the Sun           [km^3/s^2]
+%   i_dep[1]    Index of the departing planet to be used in the function
+%               uplanet
+%   i_arr[1]    Index of the arriving asteroid to be used in the function
+%               ephNEO
+%
+%  OUTPUT:
+%	delta_v_arr[1]  Delta velocity needed for the arrival manoeuvre     [km/s]
+%   delta_v_dep[1]  Delta velocity needed for the injection manoeuvre   [km/s]
+%   VI[1x3]         Initial velocity vector from lambertMR          [km/s]
+%   TPAR[1]         Parabolic ToF from lambertMR                    [s]
+%
+%  FUNCTIONS CALLED:
+%   mjd20002date.m, uplanet.m, kep2car.m, ephNEO.m, lambertMR.m 
+%
+% AUTHORS:
+%   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
+%   Brentino, Nicolò Galletta
+%
+% -------------------------------------------------------------------------
 
 %% Compute Time Of Fly of the transfer orbit
 time_arr = datetime(mjd20002date(t_arr));
@@ -35,9 +51,9 @@ if TOF >= 0
     [r_arr, v_arr] = kep2car(kep_arr(1), kep_arr(2), kep_arr(3),...
         kep_arr(4), kep_arr(5), kep_arr(6), mu);
 
-    [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr,TOF, mu, 0, 0, 2);
+    [~,~,~,~,VI,VF,TPAR,~] = lambertMR(r_dep, r_arr, TOF, mu, 0, 0, 2);
     delta_v_dep = norm(VI - v_dep');
-    delta_v_arr = norm(VF-v_arr');
+    delta_v_arr = norm(VF - v_arr');
 
 else
     delta_v_dep = NaN;

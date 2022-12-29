@@ -1,5 +1,7 @@
 %% Orbital Mechanics Project - Interplanetary mission
 
+% commenti 
+
 clc; clearvars; close all;
  
 addpath('../given functions/');
@@ -14,10 +16,13 @@ mu_E = astroConstants(13);
 mu_Sat = astroConstants(16);
 
 % define indexes for uplanet and ephNEO functions
-
 i_flyby = 6;    % Saturn
 i_NEO = 21;     % NEO
 i_dep = 3; % Earth
+
+plot_style;
+
+saveplots = input('Do you want to save the plots ("yes" or "no")? ', 's');
 
 %% Saturn-NEO Leg
 
@@ -30,7 +35,7 @@ S_N.departure.latest   = [2064, 1, 28, 23, 59, 59];
 S_N.arrival.earliest = [2032, 8, 2, 0, 0, 0];
 S_N.arrival.latest   = [2065, 1, 28, 23, 59, 59];
 
-delta_t = days(180); % days separating to dates in the search grid
+delta_t = days(250); % days separating to dates in the search grid
 
 [dates.flyby] = timeWindowMj2000(S_N.departure, delta_t);
 [dates.arrival] = timeWindowMj2000(S_N.arrival, delta_t);
@@ -64,7 +69,7 @@ i = 1;
         temp.time_arr = datetime(mjd20002date(dates.arrival(j)));
          temp.time_dep = datetime(mjd20002date(dates.flyby(k)));
 
-        if S_N.deltaV_arr(k, j) < 5 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
+        if S_N.deltaV_arr(k, j) < 7 && S_N.Tpar(k, j) < ( seconds(diff([temp.time_dep; temp.time_arr] ) ) ) % S_N.deltaV prima era S_N.deltaV_arr
             
             dates.flyby_logic(k, j) = true;
 
@@ -85,14 +90,16 @@ for i = 1:length(dates.flyby)
     PCPlot.arrival(i) = datetime(mjd20002date(dates.arrival(i)));
 end
 
-figure()
+pcp_arr = figure('Units','pixels', 'OuterPosition',[0 0 700 700]);
 hold on;
-contour(PCPlot.flyby, PCPlot.arrival, S_N.deltaV', 15:5:40, 'LineWidth',2); % S_N.deltaV prima era S_N.deltaV_arr
-xtickformat('y-mm-dd');
-ytickformat('y-mm-dd');
-xlabel('Departure Time');
-ylabel('Arrival Time');
-colorbar();
+contour(datenum(PCPlot.flyby), datenum(PCPlot.arrival), S_N.deltaV', ...
+    15:5:40, 'LineWidth',2); % S_N.deltaV prima era S_N.deltaV_arr
+datetick('x','dd/mm/yyyy','keeplimits','keepticks')
+datetick('y','dd/mm/yyyy','keeplimits','keepticks')
+xlabel('Departure date');
+ylabel('Arrival date');
+obj = colorbar;
+obj = colorbar_properties(obj, '$\Delta v$');
 clim([15, 40]);
 
 %% Save best flyby dates and correspondent deltaV_arr
@@ -106,7 +113,7 @@ S_N.deltaV_arr = S_N.deltaV_arr(temp.best_fb_time,:); % extract delta_v rows of 
 
 E_S.departure.earliest = [2030, 8, 2, 0, 0, 0]; 
 
-dates.departure = linspace(min(dates.flyby(1)-730, date2mjd2000(E_S.departure.earliest) ),...
+dates.departure = linspace(max(dates.flyby(1)-730, date2mjd2000(E_S.departure.earliest) ),...
      dates.flyby(end)-180, 70);
 
 m = length(dates.departure);
@@ -131,12 +138,26 @@ end
 
 %% PorkChop plot Saturn-Earth
 
-figure()
+for i = 1:length(dates.departure)
+    PCPlot.departure(i) = datetime(mjd20002date(dates.departure(i)));
+end
+
+
+for i = 1:length(dates.flyby)
+    PCPlot.flyby(i) = datetime(mjd20002date(dates.flyby(i)));
+end
+
+
+pcp_dep = figure('Units','pixels', 'OuterPosition',[0 0 700 700]);
 hold on;
-contour(dates.departure, dates.flyby, E_S.deltaV_dep', 20:2:40, 'LineWidth',2);
-xlabel('Departure Time');
-ylabel('Arrival Time');
-colorbar();
+contour(datenum(PCPlot.departure), datenum(PCPlot.flyby(1, 1:8)), E_S.deltaV_dep',...
+    20:2:40, 'LineWidth',2);
+datetick('x','dd/mm/yyyy','keeplimits','keepticks')
+datetick('y','dd/mm/yyyy','keeplimits','keepticks')
+xlabel('Departure date');
+ylabel('Arrival date');
+obj = colorbar;
+obj = colorbar_properties(obj, '$\Delta v$');
 clim([20, 40]);
 
 %% Cheapest departure/arrival to Saturn dates 
@@ -223,17 +244,57 @@ options = odeset('RelTol', 1e-10,'AbsTol',1e-11);
 [t_s, Y_s] = ode113(@pert_tbp, [0 S_N.TOF], plot.s0_s, options, settings);
 
 
-figure('Name', 'Lambert')
+plot.T_E = linspace(dates.dep, dates.dep+365, 100);
+plot.T_Sat = linspace(dates.fb, dates.fb+(29.5*365), 100);
+plot.T_NEO = linspace(dates.arr, dates.arr+(5*365), 100);
+
+
+for i = 1:length(plot.T_E)
+    [plot.Orb_E(i)] = date2mjd2000(datevec(plot.T_E(i)));
+    [plot.kep_earth(i, :), ~] = uplanet(plot.Orb_E(i), i_dep);
+    [plot.r_earth(:, i), ~] = kep2car(plot.kep_earth(i,1),plot.kep_earth(i,2),...
+        plot.kep_earth(i,3),plot.kep_earth(i,4),plot.kep_earth(i,5),plot.kep_earth(i,6),...
+        mu_Sun);
+
+    [plot.Orb_S(i)] = date2mjd2000(datevec(plot.T_Sat(i)));
+    [plot.kep_sat(i, :), ~] = uplanet(plot.Orb_S(i), i_flyby);
+    [plot.r_sat(:, i), ~] = kep2car(plot.kep_sat(i,1),plot.kep_sat(i,2),...
+        plot.kep_sat(i,3),plot.kep_sat(i,4),plot.kep_sat(i,5),plot.kep_sat(i,6),...
+        mu_Sun);
+
+    [plot.Orb_NEO(i)] = date2mjd2000(datevec(plot.T_NEO(i)));
+    [plot.kep_NEO(i, :), ~] = ephNEO(plot.Orb_NEO(i), i_NEO);
+    [plot.r_NEO(:, i), ~] = kep2car(plot.kep_NEO(i,1),plot.kep_NEO(i,2),...
+        plot.kep_NEO(i,3),plot.kep_NEO(i,4),plot.kep_NEO(i,5),plot.kep_NEO(i,6),...
+        mu_Sun);
+
+
+end
+
+plot.r_earth = plot.r_earth'/astroConstants(2);
+plot.r_sat = plot.r_sat'/astroConstants(2);
+plot.r_NEO = plot.r_NEO'/astroConstants(2);
+Y_e = Y_e(:, 1:3)/astroConstants(2);
+Y_s = Y_s(:, 1:3)/astroConstants(2);
+
+helio = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+view(50, 15) 
 hold on
-plot3( Y_e(:, 1), Y_e(:, 2), Y_e(:, 3), '-')
-plot3( Y_s(:, 1), Y_s(:, 2), Y_s(:, 3), '-')
-plot3(plot.r_earth(1), plot.r_earth(2), plot.r_earth(3), '.', 'MarkerSize', 20);
-plot3(plot.r_sat(1), plot.r_sat(2), plot.r_sat(3), '.', 'MarkerSize', 20);
-plot3(plot.r_NEO(1), plot.r_NEO(2), plot.r_NEO(3),'.', 'MarkerSize', 20);
-xlabel('X [km]'); ylabel('Y [km]'); zlabel('Z [km]');
-title('Transfer Orbit with Lambert Algorithm')
+plot3( Y_e(:, 1), Y_e(:, 2), Y_e(:, 3), 'Color','#4DBEEE')
+plot3( Y_s(:, 1), Y_s(:, 2), Y_s(:, 3), 'Color', '#77AC30')
+plot3(0, 0, 0, '.', 'Color', '#EDB120', 'MarkerSize', 20)
+plot3(plot.r_earth(1,1), plot.r_earth(1,2), plot.r_earth(1,3), '.', 'Color', '#0072BD', 'MarkerSize', 20)
+plot3(plot.r_earth(:, 1), plot.r_earth(:, 2), plot.r_earth(:, 3), '--', 'Color', '#0072BD', 'LineWidth', 1)
+plot3(plot.r_sat(1,1), plot.r_sat(1,2), plot.r_sat(1,3), '.', 'Color', '#D95319', 'MarkerSize', 20)
+plot3(plot.r_sat(:, 1), plot.r_sat(:, 2), plot.r_sat(:, 3), '--', 'Color', '#D95319', 'LineWidth', 1)
+plot3(plot.r_NEO(1,1), plot.r_NEO(1,2), plot.r_NEO(1,3),'.', 'Color', '#424242', 'MarkerSize', 20)
+plot3(plot.r_NEO(:, 1), plot.r_NEO(:, 2), plot.r_NEO(:, 3), '--', 'Color', '#424242', 'LineWidth', 1)
+xlabel('X [AU]'); ylabel('Y [AU]'); zlabel('Z [AU]');
+zticks([-0.4 0 0.4 0.8]);
 axis equal;
 grid on;
+legend('First leg', 'Second leg', 'Sun', 'Earth @dep.', "Earth's orbit",...
+    'Saturn @ga', "Saturn's orbit", 'NEO @arr.', "NEO's orbit" ,'Location', 'northeast');
 
     
 %% Saturn Fly-by
@@ -326,16 +387,30 @@ options = odeset('RelTol', 1e-10,'AbsTol',1e-11,'Events', @event_SOI );
 
 % total flyby duration
 flyby_duration = ( tof-ti(end)+tf(end) ) / 3600 /24;
-figure()
+
+flyby = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 hold on;
 grid on;
+view(130, 5)
+plot3(Yi(:, 1), Yi(:, 2), Yi(:, 3), 'Color','#0072BD');
+plot3(Yi(1, 1), Yi(1, 2), Yi(1, 3), '*r');
+plot3(Yf(:, 1), Yf(:, 2), Yf(:, 3), 'Color','#0072BD');
+plot3(0, 0, 0, '.', 'Color', '#EDB120', 'MarkerSize', 20);
+xlabel('X [km]');
+ylabel('Y [km]');
+zlabel('Z [km]');
+axis equal;
+legend('Flyby trajectory', 'Pericentre', '', 'Saturn', 'Location', 'northeast');
 
-plot3(Yi(:, 1), Yi(:, 2), Yi(:, 3), 'LineWidth',2);
-plot3(Yf(:, 1), Yf(:, 2), Yf(:, 3), 'LineWidth',2);
 
-opt.Units = 'km';
-planet3D('Saturn',opt);
-
+%% Save plots
+if strcmp(saveplots, 'yes')
+    mkdir('plots/');
+    exportgraphics(pcp_arr, '.\plots\pcp_arr.eps', 'ContentType','vector');
+    exportgraphics(pcp_dep, '.\plots\pcp_dep.eps', 'ContentType','vector');
+    exportgraphics(helio, '.\plots\interplanetary_traj.eps', 'ContentType','vector');
+    exportgraphics(flyby, '.\plots\flyby.eps', 'ContentType','vector');
+end
 
 
 

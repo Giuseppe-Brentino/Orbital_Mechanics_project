@@ -1,23 +1,31 @@
 function [dates_MJD2000] = timeWindowMj2000(Trajectory, delta_t)
-%{
- This function generates the vector of MJD2000 dates between the earliest
- and latest defined in the struct Trajectory.
- 
- INPUTS:
- Trajectory [2 x 6]: Matrix which contains two dates in the form of a row 
-    vector [year month day hours minutes seconds] defining the earliest and the
-    latest possible dates
- delta_t [1]: variable of type duration defining the number of days between 
-    two dates.
-
- OUTPUTS:
- dates_MJD2000 [1x?]: vector containing al the dates (in MJD2000 form) between the
-    ones described by the input Trajectory, with a spacing of delta_t days
- 
- Contributors:
- Giuseppe Brentino
-
-%}
+%
+% PROTOTYPE:
+%  [dates_MJD2000] = timeWindowMj2000(Trajectory, delta_t);
+%
+% DESCRIPTION:
+%   This function generates the vector of MJD2000 dates between the
+%   earliest and le latest defined in the struct Trajectory.
+%
+%  INPUT :
+%	Trajectory[2x6] Matrix which contains two dates in the form of a row 
+%                   vector defining the earliest and the latest possible
+%                   dates.           [year month day hours minutes seconds]
+%   delta_t[1]      Variable of tyoe duration, defining the number of days
+%                   between two dates.
+%
+%  OUTPUT:
+%	dates_MJD2000[1x?]  Vector containing all the dates between the ones
+%	described by the input Trajectory, with a spacing of delta_t days.     [MJD2000]
+%
+%  FUNCTIONS CALLED:
+%   mjd20002date.m
+%
+% AUTHOR:
+%   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
+%   Brentino, Nicolò Galletta
+%
+% -------------------------------------------------------------------------
 
 %% Convert the input dates in datetime format
 t_e = datetime(Trajectory.earliest);
