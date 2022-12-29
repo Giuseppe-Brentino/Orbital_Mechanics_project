@@ -28,7 +28,9 @@ I = [1 0 0]';
 J = [0 1 0]';
 K = [0 0 1]';
 
-r_norm = norm(r);                                                           % magnitude of position vector[km]
+
+r_norm = norm(r); % magnitude of position vector[km]
+ 
 v_norm = norm(v);                                                           % magnitude of veocity vector [km/s]
 
 a = 1 / (2 / r_norm - v_norm^2 / mu);                                       % semi-major axis [km]
@@ -38,25 +40,65 @@ h = norm(h_vect);
 
 e_vect = 1 / mu * ( cross(v,h_vect) - mu * r / r_norm );                    % eccentricity vector [-]
 e = norm(e_vect);
+ 
+i = acos ( dot(h_vect,K) / h );    % orbit's inclination [rad]
+
+%Check on the inclination
+
+if i==0
+  N_vect = I;
+  n_vect = I; 
+else
+N_vect = cross(K,h_vect);
+n_vect = cross(K,h_vect)/norm(cross(K,h_vect)); % Node line
+end 
+
+%check on the eccentricity
+
+if e < 1e-10
+    e=0; 
+    e_vect = N_vect; 
+    om = 0; 
+else
+    om = acos( dot(n_vect,e_vect) / e );                                        % argument of pericentre [rad]
+
+    if ( dot(e_vect,K) < 0 )
+
+    om = 2*pi - om;
+
+    end
+
+end
+
+%RAAN 
+
+OM = acos ( dot(n_vect,I) ); 
 
 
-i = acos ( dot(h_vect,K) / h );                                             % orbit's inclination [rad]
-
-n_vect = cross(K,h_vect) / norm( cross(K,h_vect) );                         % Node line
-
-OM = acos ( dot(n_vect,I) );                                                % RAAN [rad]
 if ( dot(n_vect,J) < 0 )
     OM = 2*pi - OM;
 end
 
-om = acos( dot(n_vect,e_vect) / e );                                        % argument of pericentre [rad]
-if ( dot(e_vect,K) < 0 )
-    om = 2*pi - om;
-end
 
-theta = acos( dot(r,e_vect) / ( r_norm * e ) );                             % true anomaly [rad]
-if ( dot(v,r) < 0 )
+check = abs(dot(r,e_vect) - ( r_norm * e )) ; 
+    
+if check < 1e-8
+    theta = 0; 
+else 
+
+    if e ==0
+
+    theta = acos( dot(r,e_vect) / (r_norm) ); 
+
+    else
+
+    theta = acos( dot(r,e_vect) / ( r_norm * e ) ); 
+
+    end 
+
+end 
+
+if (dot(v,r) < -1e-8)
     theta = 2*pi - theta;
 end
-
-end
+  

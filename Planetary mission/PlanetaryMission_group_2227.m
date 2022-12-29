@@ -21,10 +21,9 @@ drag.Area_mass = 0.0042;    % ratio between reference area and mass [m^2/kg]
 settings.mu = astroConstants(13);           % Earth's gravitational constant [km^3/s^2]
 settings.J2E = astroConstants(9);           % Earth oblateness parameter [-]
 settings.RE = astroConstants(23);           % Earth radius [km]
-settings.w_E = deg2rad(15.04)/3600;         % Earth's angular velocity [rad/s]
-
+settings.w_E =2*pi/(23*3600+56*60+4);       % Earth's angular velocity [rad/s]
 T = 2*pi*sqrt(a^3/settings.mu);             % Period of 1 orbit [s]
-T_24 = 24*3600;                             % 1 day [s] 
+T_24 = 23*3600 + 56*60 + 4;                 % 1 day [s] 
 T_10 = 10*T_24;                             % 10 days [s]
 T_year = 365.25*T_24;                       % 1 year
 
@@ -32,12 +31,12 @@ T_year = 365.25*T_24;                       % 1 year
 %% nominal GT 
 
 t_span = 300;
-t_sample = 0:T/t_span:T*30;
+t_sample = 0:T/t_span:T_24*4;
 
 [r0, v0] = kep2car(a, e, i, OM, om, theta, settings.mu);
 s0 = [r0; v0];                              % initial state vector
 settings.perturbations = false;
-options = odeset('RelTol', 1e-10,'AbsTol',1e-11 );
+options = odeset('RelTol', 1e-13,'AbsTol',1e-14 );
 [t, Y] = ode113(@pert_tbp,t_sample, s0, options, settings, drag);
 
 t0 = 0;
@@ -70,10 +69,11 @@ legend('groundtrack', 'initial position', 'final position')
 
 
 %% Modified GT
+
 T_mod = (2*pi/settings.w_E)/GT_ratio;
 a_mod = ( settings.mu*(T_mod/(2*pi))^2 )^(1/3);
 
-t_sample_mod = 0:T_mod/t_span:T_mod;
+t_sample_mod = 0:T_mod/t_span: T_24*4;
 
 [r_mod, v_mod] = kep2car(a_mod, e, i, OM, om, theta, settings.mu);
 s_mod = [r_mod; v_mod];                              % initial modified state vector
@@ -95,18 +95,6 @@ for j = 2:length(lon_mod)
     end
 
 end
-
-groundTrackPlot
-title('Modified ground track')
-xlim([-180 180]);
-ylim([-90 90]);
-xlabel('longitude [deg]')
-ylabel('latitude [deg]')
-plot(lon_mod, lat_mod, 'r','LineWidth',1);
-plot(lon_mod(1), lat_mod(1), 'or', 'LineWidth', 1);
-plot(lon_mod(end), lat_mod(end), '*r', 'LineWidth', 1);
-legend('modified ground track', 'modified orbit initial position', ...
-    'modified orbit final position')
 
 groundTrackPlot
 title('Nominal and Modified ground track')
@@ -167,6 +155,9 @@ ylabel('latitude [deg]')
 plot(lon_p, lat_p, 'y','LineWidth',1);
 plot(lon_p(1), lat_p(1), 'o', 'LineWidth', 1);
 plot(lon_p(end), lat_p(end), '*', 'LineWidth', 1);
+plot(lon, lat, 'g','LineWidth',1);
+plot(lon(1), lat(1), 'og', 'LineWidth', 1);
+plot(lon(end), lat(end), '*g', 'LineWidth', 1);
 legend('perturbed gt', 'initial position', 'final position')
 
 %% Perturbed and Modified GT
@@ -198,6 +189,9 @@ ylabel('latitude [deg]')
 plot(lon_p_mod, lat_p_mod, 'y','LineWidth',1);
 plot(lon_p_mod(1), lat_p_mod(1), 'o', 'LineWidth', 1);
 plot(lon_p_mod(end), lat_p_mod(end), '*', 'LineWidth', 1);
+plot(lon_mod, lat_mod, 'r','LineWidth',1);
+plot(lon_mod(1), lat_mod(1), 'or', 'LineWidth', 1);
+plot(lon_mod(end), lat_mod(end), '*r', 'LineWidth', 1);
 legend('perturbed and modified gt', 'initial position', 'final position')
 
 
@@ -206,14 +200,8 @@ legend('perturbed and modified gt', 'initial position', 'final position')
 kep0 = [a e i OM om theta];
 [t_G, kep_G] = ode113(@GaussEq_rsw, t_sample, kep0, options, settings, drag);
 
-Y_G = zeros(size(kep_G,1), 6);
-for j = 1:size(kep_G, 1)
-    [Y_G(j, 1:3), Y_G(j, 4:6)] = kep2car(kep_G(j, 1), kep_G(j, 2), kep_G(j, 3), kep_G(j, 4), kep_G(j, 5), kep_G(j, 6));
-
-end
-
 figure()
-title('Orbit plots')
+title('Orbit plot - Cartesian Propagation')
 hold on;
 grid on;
 axis equal;
@@ -222,27 +210,83 @@ ylabel('r_y [km]')
 zlabel('r_z [km]')
 plot_terra;
 plot3(Y_pert(:, 1), Y_pert(:, 2), Y_pert(:, 3));
-plot3(Y_G(:, 1), Y_G(:, 2), Y_G(:, 3));
-legend('Cartesian propagation', 'Gauss propagation');
 
-%% History of Keplerian elements
+%% Errors
 
 kep_pert = zeros(size(Y_pert,1),6);
+
 for j = 1:size(Y_pert,1)
 
     r = Y_pert(j, 1:3);
     v = Y_pert(j, 4:6);
 
-    [a, e, i, OM, om, th] = car2kep(r, v, settings.mu);
-    kep_pert(j, :) = [a, e, rad2deg(i), rad2deg(OM), rad2deg(om), th];
+    [a_p, e_p, i_p, OM_p, om_p, th_p] = car2kep(r, v, settings.mu);
+    kep_pert(j, :) = [a_p, e_p, i_p, OM_p, om_p, th_p]; 
 
 end
 
-kep_pert(:, 6) = rad2deg(kep_pert(:, 6)); %unwrap?
+kep_pert(:, 6) = unwrap(kep_pert(:, 6));
+
+% comparson of the two methods
+
+err = abs(kep_pert-kep_G); 
+
+err(:, 1) = err(:,1)/kep0(1); 
+err(:, 3:5) = err(:,3:5)/(2*pi); 
+err(:, 6) = err(:,6)./kep_G(:,6); 
+
+figure()
+
+subplot(3,2,1)
+semilogy(t_sample/T, err(:, 1))
+title('a error');
+xlabel('time [T]');
+ylabel('a_{car} - a_{gaus} / a_0 [-]');
+grid on;
+
+subplot(3,2,2)
+semilogy(t_sample/T, err(:,2));
+title('e error');
+xlabel('time [T]');
+ylabel('e_{car} - e_{gauss} [-]');
+grid on;
+
+subplot(3,2,3)
+semilogy(t_sample/T, err(:,3));
+title('i error');
+xlabel('time [T]');
+ylabel('i_{car} - i_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,4)
+semilogy(t_sample/T, err(:,4));
+title('\Omega error');
+xlabel('time [T]');
+ylabel('\Omega_{car} - \Omega_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,5)
+semilogy(t_sample/T,err(:,5));
+title('\omega error');
+xlabel('time [T]');
+ylabel('\omega_{car} - \omega_{gauss} / 2\pi [-]');
+grid on;
+
+subplot(3,2,6)
+semilogy(t_sample/T, err(:,6));
+title('\vartheta error');
+xlabel('time [T]');
+ylabel('\vartheta_{car} - \vartheta_{gauss} / \vartheta_0 [-]');
+grid on;
+
+
+%% History of Keplerian elements
 
 for j = 1:length(kep_G)
 
-    kep_G(j, 3:6) = [rad2deg(kep_G(j,3)), rad2deg(kep_G(j,4)), rad2deg(kep_G(j,5)), rad2deg(wrapTo2Pi(kep_G(j,6)))];  
+    kep_G(j, 3:6) = [rad2deg(kep_G(j,3)), rad2deg(kep_G(j,4)), rad2deg(kep_G(j,5)), rad2deg(kep_G(j,6))]; 
+    kep_pert(j, 3:6) = [rad2deg(kep_pert(j,3)), rad2deg(kep_pert(j,4)), rad2deg(kep_pert(j,5)), rad2deg(kep_pert(j,6))];
+
 end
 
 
@@ -320,67 +364,10 @@ ylabel('\vartheta [deg]');
 legend;
 
 %% Validation
+
 dOM_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*cos(i)/((1-e^2)^2*a^(7/2)));
 dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*(5/2*sin(i)^2-2)/((1-e^2)^2*a^(7/2)));
 
-%% Errors
-
-for j = 1:length(t_sample)
-
-    kep_G(j, 3:6) = [deg2rad(kep_G(j,3)), deg2rad(kep_G(j,4)), deg2rad(kep_G(j,5)), deg2rad(kep_G(j,6))];
-    kep_pert(j, 3:6) = [deg2rad(kep_pert(j,3)), deg2rad(kep_pert(j,4)), deg2rad(kep_pert(j,5)), deg2rad(kep_pert(j,6))]; 
-
-end
-
-err = abs(kep_pert-kep_G); 
-
-err(:, 1) = err(:,1)/kep0(1); 
-err(:, 3:5) = err(:,3:5)/(2*pi); 
-err(:, 6) = err(:,6)./kep_G(:,6); 
-
-figure()
-
-subplot(3,2,1)
-semilogy(t_sample/T, err(:, 1))
-title('a error');
-xlabel('time [T]');
-ylabel('a_{car} - a_{gaus} / a_0 [-]');
-grid on;
-
-subplot(3,2,2)
-semilogy(t_sample/T, err(:,2));
-title('e error');
-xlabel('time [T]');
-ylabel('e_{car} - e_{gauss} [-]');
-grid on;
-
-subplot(3,2,3)
-semilogy(t_sample/T, err(:,3));
-title('i error');
-xlabel('time [T]');
-ylabel('i_{car} - i_{gauss} / 2\pi [-]');
-grid on;
-
-subplot(3,2,4)
-semilogy(t_sample/T, err(:,4));
-title('\Omega error');
-xlabel('time [T]');
-ylabel('\Omega_{car} - \Omega_{gauss} / 2\pi [-]');
-grid on;
-
-subplot(3,2,5)
-semilogy(t_sample/T,err(:,5));
-title('\omega error');
-xlabel('time [T]');
-ylabel('\omega_{car} - \omega_{gauss} / 2\pi [-]');
-grid on;
-
-subplot(3,2,6)
-semilogy(t_sample/T, err(:,6));
-title('\vartheta error');
-xlabel('time [T]');
-ylabel('\vartheta_{car} - \vartheta_{gauss} / \vartheta_0 [-]');
-grid on;
 
 %% Comparison with a real S/C 
 % (RBSP A):
@@ -489,73 +476,6 @@ ylabel('\omega [deg]');
 legend;
 
 subplot(3, 2, 6)
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 6), 'DisplayName','modelled \vartheta');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 6), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 6), 'DisplayName','real \vartheta');
-title('\vartheta');
-xlabel('time [T]');
-ylabel('\vartheta [deg]');
-legend;
-
-% plot singoli
-figure()
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 1), 'DisplayName','modelled a');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 1), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 1), 'DisplayName','real a');
-title('a');
-xlabel('time [T]');
-ylabel('a [km]');
-legend;
-
-figure()
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 2), 'DisplayName','modelled e');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 2), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 2), 'DisplayName','real e');
-title('e');
-xlabel('time [T]');
-ylabel('e [-]');
-legend;
-
-figure()
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 3), 'DisplayName','modelled i');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 3), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 3), 'DisplayName','real i');
-title('i');
-xlabel('time [T]');
-ylabel('i [deg]');
-legend;
-
-figure()
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 4), 'DisplayName','modelled \Omega');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 4), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 4), 'DisplayName','real \Omega');
-title('\Omega');
-xlabel('time [T]');
-ylabel('\Omega [deg]');
-legend;
-
-figure()
-hold on;
-grid on;
-plot(t_RBSP/T_RBSP, kep_RBSP(:, 5), 'DisplayName','modelled \omega');
-plot(t_RBSP/T_RBSP, kep_RBSP_car(:, 5), 'DisplayName','modelled a car');
-plot(t_RBSP/T_RBSP, ephemeris(:, 5), 'DisplayName','real \omega');
-title('\omega');
-xlabel('time [T]');
-ylabel('\omega [deg]');
-legend;
-
-figure()
 hold on;
 grid on;
 plot(t_RBSP/T_RBSP, kep_RBSP(:, 6), 'DisplayName','modelled \vartheta');

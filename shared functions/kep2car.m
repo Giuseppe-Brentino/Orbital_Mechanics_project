@@ -53,7 +53,7 @@ R3_om=[ cos(om) sin(om) 0;
         0       0       1];
 
 % Final frame: Perifocal frame
-T_PF2ECI=[R3_om*R1_i*R3_OM]';     % Complete rotation matrix from PF to ECI
+T_PF2ECI=(R3_om*R1_i*R3_OM)';     % Complete rotation matrix from PF to ECI
 
 r = T_PF2ECI * r_PF;      %r_ECI
 v = T_PF2ECI * v_PF;      %v_ECI
