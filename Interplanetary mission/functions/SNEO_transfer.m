@@ -30,7 +30,7 @@ function [delta_v_arr,delta_v_dep,VI,TPAR] = SNEO_transfer(t_dep, t_arr, mu, i_d
 %
 % AUTHORS:
 %   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-%   Brentino, Nicolò Galletta
+%   Brentino, Nicolò Galletta 2022
 %
 % -------------------------------------------------------------------------
 

@@ -29,7 +29,7 @@ function [delta_v,VF,delta_v_dep,TPAR] = ES_transfer(t_dep, t_arr, mu, i_dep, i_
 %
 % AUTHORS:
 %   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-%   Brentino, Nicolò Galletta
+%   Brentino, Nicolò Galletta 2022
 %
 % -------------------------------------------------------------------------
 

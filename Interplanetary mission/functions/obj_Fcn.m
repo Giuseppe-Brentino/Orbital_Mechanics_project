@@ -2,7 +2,7 @@ function [delta_v] = obj_Fcn(u,i_dep,i_fb,i_arr)
 %
 % DESCRIPTION:
 %   The function gives as output the object function to be minimized by the
-%   fmincon solver.
+%   fmincon solver: the cost function represented by the total delta velocity.
 %
 %  INPUT :
 %   u[3x1]      Departure, flyby and arrival dates          [MJD2000]
@@ -24,7 +24,7 @@ function [delta_v] = obj_Fcn(u,i_dep,i_fb,i_arr)
 %
 % AUTHORS:
 %   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-%   Brentino, Nicolò Galletta
+%   Brentino, Nicolò Galletta 2022
 %
 % -------------------------------------------------------------------------
 

@@ -1,6 +1,14 @@
 %% Orbital Mechanics Project - Interplanetary mission
 
-% commenti 
+%{
+    Specifications:
+    - Departure planet: Earth 
+    - Flyby planet: Saturn
+    - Arrival NEO: UG Apollo class n.21 
+    - Earliest departure date: 02-Aug-2030 00:00:00
+    - Latest arrival date: 28-Jan-2065 23:59:59 
+
+%}
 
 clc; clearvars; close all;
  

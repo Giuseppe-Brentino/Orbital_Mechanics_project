@@ -26,7 +26,7 @@ function [C,Ceq] = nonlincon(u,i_dep,i_fb,i_arr)
 %
 % AUTHORS:
 %   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-%   Brentino, Nicolò Galletta
+%   Brentino, Nicolò Galletta 2022
 %
 % -------------------------------------------------------------------------
 

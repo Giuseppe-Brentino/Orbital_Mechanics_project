@@ -6,26 +6,27 @@ function [value, isterminal, direction] = event_SOI(t, s, settings, SOI, varargi
 %   Saturn's SOI.
 %
 %  INPUT :
-%   u[3x1]      Departure, flyby and arrival dates          [MJD2000]
-%   i_dep[1]    Index of the departing planet to be used in the function
-%               uplanet
-%   i_fb[1]     Index of the flyby planet to be used in the function
-%               uplanet
-%   i_arr[1]    Index of the arriving planet to be used in the function
-%               ephNEO
+%   t[?,1]      time vector from ODE                    [s]
+%   s[?,6]      state matrix from ODE contains          [km; km/s]
+%   settings    struct containing the following parameters: 
+%                   - settings.mu[1]            planetary constant [km^3/s^2]
+%                   - settings.perturbations    logical value, activates
+%                                               perturbations
+%   varargin    cell array containig optional input arguments          
 %
 %  OUTPUT:
-%	value[1]    Sum of three delta velocity: the one needed to perform the 
-%               injection manoeuvre, the second one needed to perform the 
-%               powered flyby and the third one to perform the arrival
-%               manoeuvre.                                          [km/s]
+%	value[1]    expression that checks if the s/c is inside the SOI of the
+%	            planet. If its numerical value is equal to 0 it activates
+%	            "isterminal".                           [km]
+%   isterminal  flag that terminates the integration when value=0
+%   direction   default flag that keeps the integration going
 %
 %  FUNCTIONS CALLED:
 %   (none)
 %
 % AUTHORS:
 %   Virginia Di Biagio Missaglia, Roberto Pistone Nascone, Giuseppe
-%   Brentino, Nicolò Galletta
+%   Brentino, Nicolò Galletta 2022
 %
 % -------------------------------------------------------------------------
 
