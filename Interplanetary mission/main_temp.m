@@ -7,6 +7,12 @@
     - Arrival NEO: UG Apollo class n.21 
     - Earliest departure date: 02-Aug-2030 00:00:00
     - Latest arrival date: 28-Jan-2065 23:59:59 
+    
+    Contributors: 
+    - Virginia Di Biagio Missaglia
+    - Nicolò Galletta
+    - Giuseppe Brentino
+    - Roberto Pistone Nascone
 
 %}
 
