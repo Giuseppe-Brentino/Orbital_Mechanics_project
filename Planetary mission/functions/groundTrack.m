@@ -1,7 +1,7 @@
 function [lon, lat] = groundTrack (state, theta_G0, t, w_E, t_0)
 %
 % PROTOTYPE:
-%  [alpha, delta, lon, lat] = groundTrack (state, theta_G0, t, w_E, t_0);
+%  [lon, lat] = groundTrack (state, theta_G0, t, w_E, t_0);
 %
 % DESCRIPTION:
 % Function to obtain groundtrack variables from cartesian coordinates
