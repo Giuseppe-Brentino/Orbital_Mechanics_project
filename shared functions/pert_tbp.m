@@ -1,6 +1,10 @@
 function dY = pert_tbp(~,s,settings, drag)
 %
-% ODE system to solve the two-body problem (Keplerian motion)
+% PROTOTYPE:
+%   dY = pert_tbp(~,s,settings, drag);
+%
+% DESCRIPTION:
+%   ODE system to solve the two-body problem (Keplerian motion)
 %
 % INPUT:
 %   t [1]       time (can be omitted)  [T]

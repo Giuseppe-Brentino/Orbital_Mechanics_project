@@ -1,26 +1,31 @@
 function [r, v] = kep2car(a, e, i, OM, om, th, mu)
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-%  Conversion from Keplerian elements to Cartesian coordinates. Angles in
-%  radians
+% PROTOTYPE:
+%   [r, v] = kep2car(a, e, i, OM, om, th, mu);
+%
+% DESCRIPTION:
+%  Conversion from Keplerian elements to Cartesian coordinates.
 %  
 % INPUT:
-%   a   [1x1] Semi-major axis           [km]
-%   e   [1x1] Eccentricity              [-]
-%   i   [1x1] Inclination               [rad]
-%   OM  [1x1] RAAN                      [rad]
-%   om  [1x1] Pericentre anomaly        [rad]
-%   th  [1x1] True anomaly              [rad]
-%   mu  [1x1] Gravitational parameter   [km^3/s^2]
+%   a[1]    Semi-major axis                     [km]
+%   e[1]    Eccentricity                        [-]
+%   i[1]    Inclination                         [rad]
+%   OM[1]   RAAN                                [rad]
+%   om[1]   Argument of pericentre              [rad]
+%   th[1]   True anomaly                        [rad]
+%   mu[1]   Planet's gravitational parameter    [km^3/s^2]
 %
 % OUTPUT:
-%   r   [3x1] Position vector           [km]
-%   v   [3x1] Velocity vector           [km/s]
+%   r[3x1]  Position vector           [km]
+%   v[3x1]  Velocity vector           [km/s]
 %
-% Contributors: 
-%   Nicolò Galletta, Virginia di Biagio Missaglia
+% FUNCTIONS CALLED:
+%   (none)
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% AUTHORS: 
+%   Nicolò Galletta, Virginia di Biagio Missaglia, Roberto Pistone Nascone,
+%   Giuseppe Brentino, 2022
+%--------------------------------------------------------------------------
 
 if nargin==6
     mu=398600.433;

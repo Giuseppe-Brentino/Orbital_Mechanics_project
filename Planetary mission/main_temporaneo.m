@@ -2,7 +2,13 @@
 
 %{
     Specifications:
-    - 
+    - semi-major axis = 1.9539*1e4 km
+    - eccentricity = 0.6607
+    - inclination = 10.4278 deg
+    - GT ratio = 13:4
+    - Perturbations: J2 and DRAG
+    - Aerodynamic drag coefficient = 2.1
+    - Area/mass ratio = 0.0042 m^2/kg
     
     Contributors: 
     - Virginia Di Biagio Missaglia
@@ -37,7 +43,8 @@ settings.RE = astroConstants(23);           % Earth radius [km]
 settings.w_E =2*pi/(23*3600+56*60+4);       % Earth's angular velocity [rad/s]
 settings.GT_ratio = 13/4;                   % satellite's revs wrt Earth's revs [-]
 settings.perturbations = false;
-T = 2*pi*sqrt(keplerian.a^3/settings.mu);             % Period of 1 orbit [s]
+
+T = 2*pi*sqrt(keplerian.a^3/settings.mu);   % Period of 1 orbit [s]
 T_24 = 23*3600 + 56*60 + 4;                 % 1 day [s] 
 T_10 = 10*T_24;                             % 10 days [s]
 T_year = 365.25*T_24;                       % 1 year

@@ -1,14 +1,26 @@
 function [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0)
 %
-% This function propagates the orbit for the given input and returns the 
-% longitude and the latitude for each timestep of the propagation
+% PROTOTYPE:
+%  [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0);
+% 
+% DESCRIPTION:
+%   This function propagates the orbit for the given input and returns the 
+%   longitude and the latitude for each timestep of the propagation.
 %
 % INPUT:
-%   T [1]       time  [s]
+%   T [1]       Total period in which propagate the orbit   [s]
 %
-%   t_span []     
+%   t_span [1]  reasoned value to create a vector of time instants that is
+%               chosen with respect to the period of the assigned 
+%               perturbations                               [-]
 %
-%   keplerian
+%   keplerian   struct containing the following parameters:
+%                   - keplerian.a           [1] semi-major axis [km]
+%                   - keplerian.e           [1] eccentricity [-]
+%                   - keplerian.i           [1] inclination [rad]
+%                   - keplerian.OM          [1] RAAN [rad]
+%                   - keplerian.om          [1] argument of pericentre [rad]
+%                   - keplerian.theta       [1] true anomaly [rad]
 %
 %   settings    struct containing the following parameters: 
 %                   - settings.mu           [1] planetary constant [km^3/s^2]
@@ -22,13 +34,13 @@ function [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0)
 %                   - drag.Area_mass [1] reference area over mass [m^2/kg]
 %                   - drag.c_d drag  [1] coefficient [-] 
 %
-%  theta_G0[1]
+%  theta_G0[1]  Greenwich meridian's longitude @ t0 [rad]
 %
-%   t0[1]
+%   t0[1]       Initial time instant to compute the groundtrack [s]
 %
 % OUTPUT:
-%   lon []  vector containing the longitude for each timestep       [deg]
-%   lat []  vector containig the latitude for each timestep         [deg]
+%   lon [?,1]  vector containing the longitude for each timestep       [deg]
+%   lat [?,1]  vector containig the latitude for each timestep         [deg]
 %  
 % FUNCTIONS CALLED:
 %   kep2car.m, pert_tbp.m, groundTrack.m
