@@ -1,4 +1,4 @@
-function [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0)
+function [lon,lat] = GT_data(T,keplerian,settings,drag,theta_G0,t0)
 %
 % PROTOTYPE:
 %  [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0);
@@ -9,10 +9,6 @@ function [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0)
 %
 % INPUT:
 %   T [1]       Total period in which propagate the orbit   [s]
-%
-%   t_span [1]  reasoned value to create a vector of time instants that is
-%               chosen with respect to the period of the assigned 
-%               perturbations                               [-]
 %
 %   keplerian   struct containing the following parameters:
 %                   - keplerian.a           [1] semi-major axis [km]
@@ -27,7 +23,6 @@ function [lon,lat] = GT_data(T,t_span,keplerian,settings,drag,theta_G0,t0)
 %                   - settings.J2E          [1] gravitational field constant [-]
 %                   - settings.RE           [1] planet's radius [km]
 %                   - settings.w_E          [1] planet's angular velocity[rad/s]
-%                   - settings.GT_ratio     [1] satellite's revs wrt planet's revs [-]
 %                   - settings.perturbations    true or false, activates perturbations
 %                                               
 %   drag        struct containing the following parameters:
@@ -59,32 +54,13 @@ theta = keplerian.theta;
 
 mu = settings.mu;
 w_E = settings.w_E;
-GT_ratio = settings.GT_ratio;
-
-orbit = 2*pi*sqrt(keplerian.a^3/settings.mu);
-t_sample = 0:orbit/t_span:T;
-
-% compute the new semi-major axis if the period is the modified one
-if T == (2*pi/w_E)/GT_ratio
-    a = (mu*(T/(2*pi))^2 )^(1/3);
-    orbit = (2*pi/w_E)/GT_ratio;
-    t_sample = 0:orbit/t_span:(23*3600 + 56*60 + 4)*4;
-end
-
-if settings.perturbations
-    if T == (2*pi/w_E)/GT_ratio
-        a = (mu*(T/(2*pi))^2 )^(1/3);
-        orbit = (2*pi/w_E)/GT_ratio;
-        t_sample = 0:orbit/t_span:(23*3600 + 56*60 + 4);
-    end
-end
 
 % orbit propagation with to ODE113
 [r0, v0] = kep2car(a, e, i, OM, om, theta, mu);
-s0 = [r0; v0];                              % initial state vector
+s0 = [r0; v0];                              
 
 options = odeset('RelTol', 1e-13,'AbsTol',1e-14 );
-[t, Y] = ode113(@pert_tbp, t_sample, s0, options, settings, drag);
+[t, Y] = ode113(@pert_tbp, [0 T], s0, options, settings, drag);
 
 % longitude and latitude computation
 [lon, lat] = groundTrack (Y, theta_G0, t, w_E, t0);
