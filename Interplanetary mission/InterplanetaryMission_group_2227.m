@@ -133,7 +133,7 @@ T_Sat = 2*pi*sqrt(sat_kep(1)^3/mu_Sun)/3600/24;
 [earth_kep,~] = uplanet(date2mjd2000(E_S.departure.earliest), i_dep);
 T_Earth = 2*pi*sqrt(earth_kep(1)^3/mu_Sun)/3600/24;
 
-dates.departure = linspace(max(dates.flyby(1)-(365*2), date2mjd2000(E_S.departure.earliest) ),...
+dates.departure = linspace(max(dates.flyby(1)-(365*6), date2mjd2000(E_S.departure.earliest) ),...
      dates.flyby(end)-(365*2), 70);
 
 m = length(dates.departure);
@@ -256,6 +256,20 @@ S_N.TOF = seconds(diff([dates.fb; dates.arr]));
 plot.s0_e = [plot.r_earth; plot.VI_e'];
 plot.s0_s = [plot.r_sat; plot.VI_s'];
 
+[transferArc1.a,transferArc1.e,transferArc1.i,...
+    transferArc1.OM, transferArc1.om,~] = car2kep(plot.r_earth,plot.VI_e',mu_Sun);
+transferArc1.a = transferArc1.a/astroConstants(2);
+transferArc1.i = rad2deg(transferArc1.i);
+transferArc1.OM = rad2deg(transferArc1.OM);
+transferArc1.om = rad2deg(transferArc1.om);
+
+[transferArc2.a,transferArc2.e,transferArc2.i,...
+    transferArc2.OM, transferArc2.om,~] = car2kep(plot.r_sat,plot.VI_s',mu_Sun);
+transferArc2.a = transferArc2.a/astroConstants(2);
+transferArc2.i = rad2deg(transferArc2.i);
+transferArc2.OM = rad2deg(transferArc2.OM);
+transferArc2.om = rad2deg(transferArc2.om);
+
 settings.perturbations = false;
 settings.mu = mu_Sun;
 options = odeset('RelTol', 1e-10,'AbsTol',1e-11);
@@ -365,7 +379,7 @@ delta = acos( vinf_m'*vinf_p / ( norm(vinf_m)*norm(vinf_p) ) );
 fun = @(rp) ( asin( 1 / (1+( rp*norm(vinf_m)^2) / mu_Sat) ) + ...
     asin(1/(1+(rp*norm(vinf_p)^2)/mu_Sat)) - delta );
 R_Sat = astroConstants(26);
-opt = optimset('Display','off', 'TolFun',1e-12);
+opt = optimset('Display','off','TolFun',1e-12);
 rp=fsolve(fun, R_Sat,opt);
 
 if rp <= R_Sat || rp > R_Sat*906.9

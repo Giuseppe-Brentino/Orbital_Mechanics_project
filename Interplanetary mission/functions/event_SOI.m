@@ -12,6 +12,7 @@ function [value, isterminal, direction] = event_SOI(t, s, settings, SOI, varargi
 %                   - settings.mu[1]            planetary constant [km^3/s^2]
 %                   - settings.perturbations    logical value, activates
 %                                               perturbations
+%   SOI[1]      radius of the sphere of influence       [km]
 %   varargin    cell array containig optional input arguments          
 %
 %  OUTPUT:
