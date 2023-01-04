@@ -134,7 +134,7 @@ T_Sat = 2*pi*sqrt(sat_kep(1)^3/mu_Sun)/3600/24;
 T_Earth = 2*pi*sqrt(earth_kep(1)^3/mu_Sun)/3600/24;
 
 dates.departure = linspace(max(dates.flyby(1)-(365*6), date2mjd2000(E_S.departure.earliest) ),...
-     dates.flyby(end)-(365*2), 70);
+     dates.flyby(end)-(365*1), 70);
 
 m = length(dates.departure);
 n = length(dates.flyby);
