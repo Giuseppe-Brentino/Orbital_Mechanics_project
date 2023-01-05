@@ -25,7 +25,6 @@ addpath('../given functions/time/');
 addpath('../shared functions/');
 addpath('./functions/');
 
-
 %data
 keplerian.a = 1.9539*1e4;             % semi-major axis [km]
 keplerian.e = 0.6607;                 % eccentricity [-]
@@ -41,20 +40,23 @@ settings.mu = astroConstants(13);           % Earth's gravitational constant [km
 settings.J2E = astroConstants(9);           % Earth oblateness parameter [-]
 settings.RE = astroConstants(23);           % Earth radius [km]
 settings.w_E =2*pi/(23*3600+56*60+4);       % Earth's angular velocity [rad/s]
-settings.perturbations = false;
 
 GT_ratio = 13/4;                            % satellite's revs wrt Earth's revs [-]
 
 T = 2*pi*sqrt(keplerian.a^3/settings.mu);   % Period of 1 orbit [s]
 T_24 = 23*3600 + 56*60 + 4;                 % 1 day [s] 
 T_10 = 10*T_24;                             % 10 days [s]
-T_year = 365.25*T_24;                       % 1 year
+T_year = 365.25*T_24;                       % 1 year [s]
 
 t0 = 0;
 theta_G0 = 0;
 t_span = 300;
 
+plot_style;
+saveplots = input('Do you want to save the plots ("yes" or "no")? ', 's');
+
 %% Nominal GT for different orbit periods
+settings.perturbations = false;
 [lon_1, lat_1] = GT_data(T, keplerian, settings, drag, theta_G0, t0);
 [lon_24, lat_24] = GT_data(T_24, keplerian, settings, drag, theta_G0, t0);
 [lon_10, lat_10] = GT_data(T_10, keplerian, settings, drag, theta_G0, t0);
@@ -66,6 +68,7 @@ a_mod = ( settings.mu*(T_mod/(2*pi))^2 )^(1/3);
 keplerian_mod = keplerian;
 keplerian_mod.a = a_mod;
 
+settings.perturbations = false;
 [lon_m, lat_m] = GT_data(T_24*4, keplerian_mod, settings, drag, theta_G0, t0);
 [lon_d, lat_d] = GT_data(T_24*4, keplerian, settings, drag, theta_G0, t0);
 
@@ -74,6 +77,7 @@ settings.perturbations = true;
 [lon_pert, lat_pert] = GT_data(T_24, keplerian, settings, drag, theta_G0, t0);
 
 %% Perturbed and Modified GT
+settings.perturbations = true;
 [lon_pert_mod, lat_pert_mod] = GT_data(T_mod*13, keplerian_mod, settings, drag, theta_G0, t0);
 
 settings.perturbations = false;
@@ -81,10 +85,9 @@ settings.perturbations = false;
 
 %% GT plots
 
-plot_style;
-
-groundTrackPlot
-title('1 orbit')
+GT_1_orbit = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_1_orbit)
+% title('Nominal groundtrack, 1 orbit')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -94,8 +97,9 @@ plot(lon_1(1), lat_1(1), 'o', 'Color', '#EDB120', 'MarkerSize', 12);
 plot(lon_1(end), lat_1(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
 legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
 
-groundTrackPlot
-title('24 hours orbit')
+GT_24h = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_24h)
+% title('Nominal groundtrack, 24 hours')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -105,8 +109,9 @@ plot(lon_24(1), lat_24(1), 'o', 'Color', '#EDB120','MarkerSize', 12);
 plot(lon_24(end), lat_24(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
 legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
 
-groundTrackPlot
-title('10 days orbit')
+GT_10_day = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_10_day)
+% title('Nominal groundtrack, 10 days')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -116,29 +121,32 @@ plot(lon_10(1), lat_10(1), 'o', 'Color', '#EDB120', 'MarkerSize', 12);
 plot(lon_10(end), lat_10(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
 legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
 
-groundTrackPlot
-title('Nominal and Modified ground track')
+GT_modified = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_modified)
+% title('Nominal and Modified groundtracks, 4 days')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
 ylabel('Latitude [deg]')
+plot(lon_d, lat_d, 'r');
+plot(lon_d(1), lat_d(1), 'o', 'Color', '#EDB120', 'MarkerSize', 12);
+plot(lon_d(end), lat_d(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
 plot(lon_m, lat_m, 'g');
 plot(lon_m(1), lat_m(1), 'oc', 'MarkerSize', 12);
 plot(lon_m(end), lat_m(end), '*c', 'MarkerSize', 12);
-plot(lon_d, lat_d, 'r');
-plot(lon_d(1), lat_d(1), 'oy', 'MarkerSize', 12);
-plot(lon_d(end), lat_d(end), '*y', 'MarkerSize', 12);
-legend('modified ground track', 'modified orbit initial position', ...
-    'modified orbit final position', 'nominal ground track', ...
-    'nominal orbit initial position', 'nominal orbit final position', 'Location','northeast')
+legend('nominal ground track', 'nominal orbit initial position', ...
+    'nominal orbit final position', 'modified ground track',...
+    'modified orbit initial position', 'modified orbit final position', ...
+    'Location','northeast')
 
-groundTrackPlot
-title('24 hour orbit')
+GT_pert = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_pert)
+% title('Perturbed and Nominal groundtracks, 24 hour orbit')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
 ylabel('Latitude [deg]')
-plot(lon_pert, lat_pert, 'y');
+plot(lon_pert, lat_pert, 'Color', '#EDB120');
 plot(lon_pert(1), lat_pert(1), 'o', 'Color', '#4DBEEE', 'MarkerSize', 12);
 plot(lon_pert(end), lat_pert(end), '*', 'Color', '#4DBEEE', 'MarkerSize', 12);
 plot(lon_24, lat_24, 'r');
@@ -148,8 +156,9 @@ legend('perturbed gt', 'initial perturbed position', ...
     'final perturbed position', 'nominal gt', 'initial nominal position', ...
     'final nominal position', 'Location','northeast')
 
-groundTrackPlot
-title('13 orbits')
+GT_pert_and_mod = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+groundTrackPlot(GT_pert_and_mod)
+% title('Perturbed and Modified groundtracks, 13 orbits')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -168,9 +177,9 @@ legend('perturbed and modified gt', 'initial pert. and mod. position', ...
 %% Orbit propagation with Gauss's Eqns
 
 settings.perturbations = true;
-t_sample = 0:T/t_span:T_24*180;
-
 options = odeset('RelTol', 1e-13,'AbsTol',1e-14 );
+
+t_sample = 0:T/t_span:1500*T;
 
 kep0 = [keplerian.a keplerian.e keplerian.i keplerian.OM keplerian.om keplerian.theta];
 
@@ -186,7 +195,9 @@ tic
 [t_pert, Y_pert] = ode113(@pert_tbp, t_sample, s0, options, settings, drag);
 t_Cart = toc;
 
-% figure()
+S = repmat([1 .75 .5]*10,numel(t_pert),1);
+
+% orbitPlot = figure();
 % title('Orbit plot - Cartesian Propagation')
 % hold on;
 % grid on;
@@ -211,15 +222,11 @@ for j = 1:size(Y_pert,1)
 
 end
 
-kep_pert(:, 4) = wrapTo2Pi(kep_pert(:, 4));
-kep_pert(:, 5) = wrapTo2Pi(kep_pert(:, 5));
-kep_pert(:, 6) = wrapTo360(kep_pert(:, 6));
+kep_pert(:, 4) = unwrap(kep_pert(:, 4));
+kep_pert(:, 5) = unwrap(kep_pert(:, 5));
+kep_pert(:, 6) = unwrap(kep_pert(:, 6));
 
-kep_G(:, 4) = wrapTo2Pi(kep_G(:, 4));
-kep_G(:, 5) = wrapTo2Pi(kep_G(:, 5));
-kep_G(:, 6) = wrapTo2Pi(kep_G(:, 6));
-
-% comparson of the two methods
+% comparison of the two methods
 
 err = abs(kep_pert-kep_G); 
 
@@ -227,50 +234,71 @@ err(:, 1) = err(:,1)/kep0(1);
 err(:, 3:5) = err(:,3:5)/(2*pi); 
 err(:, 6) = err(:,6)./kep_G(:,6); 
 
-figure('Units','normalized', 'OuterPosition',[0 0 1 1])
+Plot_errors = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 
-subplot(3,2,1)
+subplot(2,3,1)
 semilogy(t_sample/T, err(:, 1))
 title('a error');
 xlabel('time [T]');
 ylabel('$|a_{car}$ - $a_{gauss}|$ / $a_0$ [-]');
 grid on;
 
-subplot(3,2,2)
+subplot(2,3,2)
 semilogy(t_sample/T, err(:,2));
 title('e error');
 xlabel('time [T]');
 ylabel('$|e_{car}$ - $e_{gauss}|$ [-]');
 grid on;
 
-subplot(3,2,3)
+subplot(2,3,3)
 semilogy(t_sample/T, err(:,3));
 title('i error');
 xlabel('time [T]');
 ylabel('$|i_{car}$ - $i_{gauss}|$ / $2\pi$ [-]');
 grid on;
 
-subplot(3,2,4)
+subplot(2,3,4)
 semilogy(t_sample/T, err(:,4));
 title('$\Omega$ error');
 xlabel('time [T]');
-ylabel('$|\Omega_{car}$ - $$\Omega_{gauss}|$$ / $2\pi$ [-]');
+ylabel('$|\Omega_{car}$ - $\Omega_{gauss}|$ / $2\pi$ [-]');
 grid on;
 
-subplot(3,2,5)
+subplot(2,3,5)
 semilogy(t_sample/T,err(:,5));
 title('$\omega$ error');
 xlabel('time [T]');
-ylabel('$$|\omega_{car}$$ - $$\omega_{gauss}|$$ / $2\pi$ [-]');
+ylabel('$|\omega_{car}$ - $\omega_{gauss}|$ / $2\pi$ [-]');
 grid on;
 
-subplot(3,2,6)
+subplot(2,3,6)
 semilogy(t_sample/T, err(:,6));
 title('$\vartheta$ error');
 xlabel('time [T]');
-ylabel('$$|\vartheta_{car}$$ - $$\vartheta_{gauss}|$$ / $$\vartheta_{gauss}$$ [-]');
+ylabel('$|\vartheta_{car}$ - $\vartheta_{gauss}|$ / $\vartheta_{gauss}$ [-]');
 grid on;
 
+%% Validation
+% theoretical value for J2 perturbations
+dOM_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
+    cos(keplerian.i)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
+dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
+    (5/2*sin(keplerian.i)^2-2)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
+
+
+da_model = polyfit(t_pert, kep_pert(:,1), 1);
+da_model = da_model(1);
+de_model = polyfit(t_pert, kep_pert(:,2), 1);
+de_model = de_model(1);
+di_model = polyfit(t_pert, kep_pert(:,3), 1);
+di_model = di_model(1);
+dOM_model = polyfit(t_pert, kep_pert(:,4), 1);
+dOM_model = dOM_model(1);
+dom_model = polyfit(t_pert, kep_pert(:,5), 1);
+dom_model = dom_model(1);
+
+drag4OM = dOM_model - dOM_theoretical
+drag4om = dom_model - dom_theoretical
 
 %% History of Keplerian elements
 
@@ -281,124 +309,202 @@ for j = 1:length(kep_G)
 
 end
 
-
 %% Filtering
-kep_f = movmean(kep_pert, t_span);
+kep_filterT = movmean(kep_pert, t_span);
+kep_filter400T = movmean(kep_pert, t_span*470);
 
 %% Figures
+% t_G = t_G/T;
+% t_pert = t_pert/T;
 
-figure('Units','normalized', 'OuterPosition',[0 0 1 1])
+% 10 orbit plots to show:
+% - short period oscillations in details
+% - secular variations of RAAN and w (due to J2)
 
-subplot(3, 2, 1)
+n_orbit = 10;           % number of plotted orbits
+ind = t_span*n_orbit;   % last index of the vector (useful for plots)
+
+filtering_10T = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+
+subplot(2, 3, 1)
 hold on;
 grid on;
-plot(t_G/T, kep_G(:, 1), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert/T, kep_pert(:, 1), 'DisplayName','Cartesian');
-plot(t_pert/T, kep_f(:, 1), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 1), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 1), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 1),'Color', '#EDB120', 'DisplayName', 'Secular');
 title('a');
 xlabel('time [T]');
 ylabel('a [km]');
 
-subplot(3, 2, 2)
+subplot(2, 3, 2)
 hold on;
 grid on;
-plot(t_G/T, kep_G(:, 2), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert/T, kep_pert(:, 2), 'DisplayName','Cartesian');
-plot(t_pert/T, kep_f(:, 2), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 2), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 2), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 2),'Color', '#EDB120', 'DisplayName', 'Secular');
 title('e');
 xlabel('time [T]');
 ylabel('e [-]');
 
-subplot(3, 2, 3)
+subplot(2, 3, 3)
 hold on;
 grid on;
-plot(t_G/T, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert/T, kep_pert(:, 3), 'DisplayName','Cartesian');
-plot(t_pert/T, kep_f(:, 3), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 3), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 3), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 3),'Color', '#EDB120', 'DisplayName', 'Long Term');
 title('i');
 xlabel('time [T]');
 ylabel('i [deg]');
 
-subplot(3, 2, 4)
+subplot(2, 3, 4)
 hold on;
 grid on;
-plot(t_G(1:300*5)/T, kep_G(1:300*5, 4), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert(1:300*5)/T, kep_pert(1:300*5, 4), 'DisplayName','Cartesian');
-plot(t_pert(1:300*5)/T, kep_f(1:300*5, 4), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 4), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 4), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 4),'Color', '#EDB120', 'DisplayName', 'Secular');
 title('$\Omega$');
 xlabel('time [T]');
 ylabel('$\Omega$ [deg]');
 legend;
 
-subplot(3, 2, 5)
+subplot(2, 3, 5)
 hold on;
 grid on;
-plot(t_G(1:300*5)/T, kep_G(1:300*5, 5), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert(1:300*5)/T, kep_pert(1:300*5, 5), 'DisplayName','Cartesian');
-plot(t_pert(1:300*5)/T, kep_f(1:300*5, 5), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 5), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 5), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 5),'Color', '#EDB120', 'DisplayName', 'Secular');
 title('$\omega$');
 xlabel('time [T]');
 ylabel('$\omega$ [deg]');
 
-subplot(3, 2, 6)
+subplot(2, 3, 6)
 hold on;
 grid on;
-plot(t_G(1:300*5)/T, kep_G(1:300*5, 6), 'DisplayName','Gauss Equation(RSW)');
-plot(t_pert(1:300*5)/T, kep_pert(1:300*5, 6), 'DisplayName','Cartesian');
-plot(t_pert(1:300*5)/T, kep_f(1:300*5, 6), 'b', 'DisplayName', 'Secular');
+plot(t_G(1:ind), kep_G(1:ind, 6), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 6), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 6), 'Color', '#EDB120', 'DisplayName', 'Secular');
 title('$\vartheta$');
 xlabel('time [T]');
 ylabel('$\vartheta$ [deg]');
 
-%% Validation
+% 100 orbits plots to show:
+% - secular variations of a, e, i (due to drag)
 
-dOM_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
-    cos(keplerian.i)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
-dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
-    (5/2*sin(keplerian.i)^2-2)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
+filtering_100T = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
+
+n_orbit = 100;           % number of plotted orbits
+ind = t_span*n_orbit;   % last index of the vector (useful for plots)
+
+subplot(2, 3, 1)
+hold on;
+grid on;
+plot(t_G(1:ind), kep_G(1:ind, 1), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 1), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 1), 'Color', '#EDB120', 'DisplayName', 'Secular');
+% plot(t_pert(1:ind), kep_filter400T(1:ind,1), 'DisplayName', 'Secular');
+title('a');
+xlabel('time [T]');
+ylabel('a [km]');
+
+subplot(2, 3, 2)
+hold on;
+grid on;
+plot(t_G(1:ind), kep_G(1:ind, 2), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 2), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 2), 'Color', '#EDB120', 'DisplayName', 'Secular');
+% plot(t_pert(1:ind), kep_filter400T(1:ind,2), 'DisplayName', 'Secular');
+title('e');
+xlabel('time [T]');
+ylabel('e [-]');
+
+subplot(2, 3, 3)
+hold on;
+grid on;
+plot(t_G, kep_G(:, 3), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert, kep_pert(:, 3), 'DisplayName','Cartesian');
+plot(t_pert, kep_filterT(:, 3), 'b', 'DisplayName', 'Long period');
+plot(t_pert, kep_filter400T(:,3), 'Color', '#EDB120', 'DisplayName', 'Secular');
+title('i');
+xlabel('time [T]');
+ylabel('i [deg]');
+legend;
+
+subplot(2, 3, 4)
+hold on;
+grid on;
+plot(t_G(1:ind), kep_G(1:ind, 4), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 4), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 4), 'Color', '#EDB120', 'DisplayName', 'Secular');
+% plot(t_pert(1:ind), kep_filter400T(1:ind,4), 'DisplayName', 'Secular');
+title('$\Omega$');
+xlabel('time [T]');
+ylabel('$\Omega$ [deg]');
+
+subplot(2, 3, 5)
+hold on;
+grid on;
+plot(t_G(1:ind), kep_G(1:ind, 5), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 5), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 5), 'Color', '#EDB120', 'DisplayName', 'Secular');
+% plot(t_pert(1:ind), kep_filter400T(1:ind,5), 'DisplayName', 'Secular');
+title('$\omega$');
+xlabel('time [T]');
+ylabel('$\omega$ [deg]');
+
+subplot(2, 3, 6)
+hold on;
+grid on;
+plot(t_G(1:ind), kep_G(1:ind, 6), 'DisplayName','Gauss Equation(RSW)');
+plot(t_pert(1:ind), kep_pert(1:ind, 6), 'DisplayName','Cartesian');
+plot(t_pert(1:ind), kep_filterT(1:ind, 6),'Color', '#EDB120', 'DisplayName', 'Secular');
+% plot(t_pert(1:ind), kep_filter400T(1:ind,6), 'DisplayName', 'Secular');
+title('$\vartheta$');
+xlabel('time [T]');
+ylabel('$\vartheta$ [deg]');
 
 %% Comparison with a real S/C 
 % (RBSP A):
 % 1 38752U 12046A   22356.68464903  .00041754 -19467-6  20092-2 0  9996
 % 2 38752   9.6632 224.8380 6686770  18.4387 357.3584  3.10486121103321
-ephemeris = readEphemeris('RBSP_A_1min_10d');
+ephemeris10d = readEphemeris('RBSP_A_1min_10d');
+min=1;
+days=10;
+t_SC_ephem_10d = 0:min*60:days*24*3600;
 
 % initial data
-a_SC = ephemeris(1,1);                 % semi-major axis [km]
-e_SC = ephemeris(1,2);                 % eccentricity [-]
-i_SC = deg2rad(ephemeris(1,3));        % inclination [rad]
-OM_SC = deg2rad(ephemeris(1,4));       % RAAN [rad]
-om_SC = deg2rad(ephemeris(1,5));       % argument of pericentre [rad]
-theta_SC = deg2rad(ephemeris(1,6));    % true anomaly [rad]
+a_SC = ephemeris10d(1,1);                 % semi-major axis [km]
+e_SC = ephemeris10d(1,2);                 % eccentricity [-]
+i_SC = deg2rad(ephemeris10d(1,3));        % inclination [rad]
+OM_SC = deg2rad(ephemeris10d(1,4));       % RAAN [rad]
+om_SC = deg2rad(ephemeris10d(1,5));       % argument of pericentre [rad]
+theta_SC = deg2rad(ephemeris10d(1,6));    % true anomaly [rad]
 
 kep0_SC = [a_SC e_SC i_SC OM_SC om_SC theta_SC];
 
-drag_SC.c_d = 2.1;                     % drag coefficient [-]
+drag_SC.c_d = 2.1;                              % drag coefficient [-]
 drag_SC.Area_mass = (1.8*1.8+4*0.9*0.9) /647.6; % ratio between reference area and mass [m^2/kg]
 
 T_SC = 2*pi*sqrt(a_SC^3/settings.mu);
 
-Time = 100*T_SC;
-t_span_SC = 0:T_SC/300:Time;
-t_SC_ephem = 0:60:10*24*3600;
+Time = 40*T_SC;
 
 options = odeset('RelTol', 1e-13,'AbsTol',1e-14 );
 settings.perturbations = true;
-[t_SC_kep, kep_SC]=ode113(@GaussEq_rsw, t_span_SC, kep0_SC, options, settings, drag_SC);
+[t_SC_kep, kep_SC]=ode113(@GaussEq_rsw, [0 Time], kep0_SC, options, settings, drag_SC);
 
 for j=1:length(t_SC_kep)
     kep_SC(j, 3:6) = [rad2deg(kep_SC(j,3)), rad2deg(kep_SC(j,4)), ...
         rad2deg(kep_SC(j,5)), rad2deg(wrapTo2Pi(kep_SC(j,6)))];
 end
 
-% plots
-figure()
+%% Comparison for 10 days (plots)
+plot_realSC_10 = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 
 subplot(3, 2, 1)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 1), 'DisplayName','modelled a');
-plot(t_SC_ephem/T_SC, ephemeris(:, 1), 'DisplayName','real a');
+plot(t_SC_kep/T_SC, kep_SC(:, 1), 'DisplayName','modeled a');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 1), 'DisplayName','real a');
 title('a');
 xlabel('time [T]');
 ylabel('a [km]');
@@ -407,8 +513,8 @@ legend;
 subplot(3, 2, 2)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 2), 'DisplayName','modelled e');
-plot(t_SC_ephem/T_SC, ephemeris(:, 2), 'DisplayName','real e');
+plot(t_SC_kep/T_SC, kep_SC(:, 2), 'DisplayName','modeled e');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 2), 'DisplayName','real e');
 title('e');
 xlabel('time [T]');
 ylabel('e [-]');
@@ -417,8 +523,8 @@ legend;
 subplot(3, 2, 3)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 3), 'DisplayName','modelled i');
-plot(t_SC_ephem/T_SC, ephemeris(:, 3), 'DisplayName','real i');
+plot(t_SC_kep/T_SC, kep_SC(:, 3), 'DisplayName','modeled i');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 3), 'DisplayName','real i');
 title('i');
 xlabel('time [T]');
 ylabel('i [deg]');
@@ -427,29 +533,44 @@ legend;
 subplot(3, 2, 4)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 4), 'DisplayName','modelled \Omega');
-plot(t_SC_ephem/T_SC, ephemeris(:, 4), 'DisplayName','real \Omega');
-title('\Omega');
+plot(t_SC_kep/T_SC, kep_SC(:, 4), 'DisplayName','modeled $\Omega$');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 4), 'DisplayName','real $\Omega$');
+title('$\Omega$');
 xlabel('time [T]');
-ylabel('\Omega [deg]');
+ylabel('$\Omega [deg]$');
 legend;
 
 subplot(3, 2, 5)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 5), 'DisplayName','modelled \omega');
-plot(t_SC_ephem/T_SC, ephemeris(:, 5), 'DisplayName','real \omega');
-title('\omega');
+plot(t_SC_kep/T_SC, kep_SC(:, 5), 'DisplayName','modelled $\omega$');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 5), 'DisplayName','real $\omega$');
+title('$\omega$');
 xlabel('time [T]');
-ylabel('\omega [deg]');
+ylabel('$\omega$ [deg]');
 legend;
 
 subplot(3, 2, 6)
 hold on;
 grid on;
-plot(t_SC_kep/T_SC, kep_SC(:, 6), 'DisplayName','modelled \vartheta');
-plot(t_SC_ephem/T_SC, ephemeris(:, 6), 'DisplayName','real \vartheta');
-title('\vartheta');
+plot(t_SC_kep/T_SC, kep_SC(:, 6), 'DisplayName','modelled $\vartheta$');
+plot(t_SC_ephem_10d/T_SC, ephemeris10d(:, 6), 'DisplayName','real $\vartheta$');
+title('$\vartheta$');
 xlabel('time [T]');
-ylabel('\vartheta [deg]');
+ylabel('$\vartheta$ [deg]');
 legend;
+
+%% Save plots
+if strcmp(saveplots, 'yes')
+    mkdir('plots/');
+    exportgraphics(GT_1_orbit, '.\plots\GT_1_orbit.eps', 'ContentType','vector');
+    exportgraphics(GT_24h, '.\plots\GT_24h.eps', 'ContentType','vector');
+    exportgraphics(GT_10_day, '.\plots\GT_10_day.eps', 'ContentType','vector');
+    exportgraphics(GT_modified, '.\plots\GT_modified.eps', 'ContentType','vector');
+    exportgraphics(GT_pert, '.\plots\GT_pert.eps', 'ContentType','vector');
+    exportgraphics(GT_pert_and_mod, '.\plots\GT_pert_and_mod.eps', 'ContentType','vector');
+    exportgraphics(Plot_errors, '.\plots\Plot_errors.eps', 'ContentType','vector');
+    exportgraphics(filtering_10T, '.\plots\filtering_10T.eps', 'ContentType','vector');
+    exportgraphics(plot_realSC_10, '.\plots\plot_realSC_10.eps', 'ContentType','vector');
+
+end
