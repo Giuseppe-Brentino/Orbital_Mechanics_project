@@ -8,6 +8,9 @@
     - Earliest departure date: 02-Aug-2030 00:00:00
     - Latest arrival date: 28-Jan-2065 23:59:59 
     
+    Required toolboxes:
+    - Optimization toolbox
+
     Contributors: 
     - Virginia Di Biagio Missaglia
     - Nicolò Galletta
@@ -235,11 +238,11 @@ dates.arrival = u(3);
     plot.kep_sat(4),plot.kep_sat(5),plot.kep_sat(6),mu_Sun);
 
 [plot.kep_earth, ~] = uplanet(dates.departure, i_dep);
-[plot.r_earth, ~] = kep2car(plot.kep_earth(1),plot.kep_earth(2),plot.kep_earth(3),...
+[plot.r_earth, v_earth] = kep2car(plot.kep_earth(1),plot.kep_earth(2),plot.kep_earth(3),...
     plot.kep_earth(4),plot.kep_earth(5),plot.kep_earth(6),mu_Sun);
 
 [plot.kep_NEO, ~] = ephNEO(dates.arrival, i_NEO);
-[plot.r_NEO, ~] = kep2car(plot.kep_NEO(1),plot.kep_NEO(2),plot.kep_NEO(3),...
+[plot.r_NEO, v_NEO] = kep2car(plot.kep_NEO(1),plot.kep_NEO(2),plot.kep_NEO(3),...
     plot.kep_NEO(4),plot.kep_NEO(5),plot.kep_NEO(6),mu_Sun);
 
 dates.dep = datetime(mjd20002date(dates.departure));
@@ -276,6 +279,9 @@ options = odeset('RelTol', 1e-10,'AbsTol',1e-11);
 
 [t_e, Y_e] = ode113(@pert_tbp, [0 E_S.TOF], plot.s0_e, options, settings);
 [t_s, Y_s] = ode113(@pert_tbp, [0 S_N.TOF], plot.s0_s, options, settings);
+
+deltaV_dep = norm(v_earth' - plot.VI_e);
+deltaV_arr = norm(v_NEO' - Y_s(end,4:6));
 
 plot.T_E = linspace(dates.dep, dates.dep+T_Earth, 100);
 plot.T_Sat = linspace(dates.fb, dates.fb+T_Sat, 100);
