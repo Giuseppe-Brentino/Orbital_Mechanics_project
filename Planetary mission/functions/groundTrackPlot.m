@@ -1,3 +1,5 @@
+function groundTrackPlot(figureName)
+
 % DESCRIPTION:
 % Call this function in order to plot Earth as background of the
 % groundtrack plots
@@ -10,7 +12,12 @@
 % website: https://visibleearth.nasa.gov
 %--------------------------------------------------------------------------
 
-figure()
+if nargin == 0
+    figure()
+else
+    figure(figureName)
+end
+
 hold on;
 grid on;
 photo = imread('Earth.png');
