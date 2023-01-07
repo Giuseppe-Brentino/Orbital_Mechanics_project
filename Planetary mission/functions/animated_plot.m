@@ -1,7 +1,7 @@
-function animated_plot(X,Y,Z, n_periods, n_point, inclination)
+function movievector = animated_plot(X,Y,Z, T, n_periods, p_span, n_point, pov, Eq_Plane)
 %
 % PROTOTYPE:
-% animated_plot(X,Y,Z, n_periods, n_point, inclination)
+% movievector = animated_plot(X,Y,Z, T, n_periods, p_span, n_point, pov, Eq_Plane)
 %
 % DESCRIPTION:
 % The function creates an animated plot of the orbit evolutions over an
@@ -11,14 +11,20 @@ function animated_plot(X,Y,Z, n_periods, n_point, inclination)
 %
 % INPUT:
 %   X [?,1]         x coordinates of S/C position vector in cartesian rf [km]
-%   X [?,1]         y coordinates of S/C position vector in cartesian rf [km]
-%   X [?,1]         z coordinates of S/C position vector in cartesian rf [km]
+%   Y [?,1]         y coordinates of S/C position vector in cartesian rf [km]
+%   Z [?,1]         z coordinates of S/C position vector in cartesian rf [km]
+%   T [1]           orbit initial period [s]
 %   n_periods [1]   number of periods of the plot [-]
+%   p_span [1]      periods for each frame [-]
 %   n_point [1]     number of time interval for each period [-]
-%   inclination [1] initial inclination angle [deg] (default is 0)
+%   pov [2]         point of view: azimuth and elevation [deg] 
+%   Eq_Plane        plot equatorial plane (true or false)
 %
-%   Note: n_periods and n_point must be positive integer numbers,
-%   inclination can be omitted
+%   Note: n_periods, p_span and n_point must be positive integer numbers,
+%   pov and Eq_Plane can be omitted (default: view=[0,0], Eq_Plane=false)
+%
+% OUTPUT:
+%   movievector     struct containing all the frames of the animated plot
 %
 % FUNCTIONS CALLED:
 % plot_terra.m
@@ -28,27 +34,34 @@ function animated_plot(X,Y,Z, n_periods, n_point, inclination)
 %   Galletta, Roberto Pistone Nascone, 2022
 % -------------------------------------------------------------------------
 
+suplim = max([max(X), max(Y), max(Z)]) +1000;
+inflim = min([min(X), min(Y), min(Z)]) -1000;
 
-suplim = max([max(X), max(Y), max(Z)])+2000;
-inflim = min([min(X), min(Y), min(Z)])-2000;
+k=max(suplim, abs(inflim));
 
-if nargin == 5
-    inclination = 0;
+if nargin == 7
+    pov = [0,0];
+    Eq_Plane=false;
 end
 
-figure()
+az=pov(1);
+el=pov(2);
+
+figure('Units','normalized','OuterPosition', [0 0 1 1])
 plot_terra
 set(gca, 'color', '#010020')
 axis equal
-hold on
+
+if Eq_Plane
+patch([1 -1 -1 1]*k, [1 1 -1 -1]*k, [0 0 0 0], 'b', 'FaceAlpha', 0.8)
+end
 
 h = animatedline('Color', '#00d400', 'LineWidth', 2);
-axis([inflim suplim inflim suplim inflim suplim])
-xlabel('r_x [km]')
-ylabel('r_y [km]')
-zlabel('r_z [km]')
+axis([inflim suplim inflim suplim -7000 7000])
 
-for i=1:n_periods
+k=1;
+
+for i=1:p_span:n_periods
 
     clearpoints(h)
 
@@ -56,22 +69,31 @@ for i=1:n_periods
     y = [ Y( (n_point*i-n_point + 1): n_point*i)];
     z = [ Z( (n_point*i-n_point + 1): n_point*i)];
 
-    addpoints(h, x, y, z)
-    view(180, 90+inclination)
-    title(['orbit evolution at time ' num2str(i) 'T'], 'Color', '#fdf6e4', ...
-        'FontSize', 8)
-    set(get(gca,'title'),'Position',[1/2*suplim inflim+1000 1/2*suplim])
+    year = i*T/(365.25*24*3600);
 
-    movievector(i) = getframe;
+    addpoints(h, x, y, z)
+    view(az, el)
+    title(['elapsed years: ' num2str(year)], ...
+        'Color', '#fdf6e4', 'FontSize', 11)
+    subtitle(['elapsed periods: ' num2str(i)], ...
+        'Color', '#fdf6e4', 'FontSize', 11)
+    set(get(gca,'title'),'Position', [1/2*suplim 1/2*suplim 1/2*suplim])
+    set(get(gca,'subtitle'),'Position', [1/3*suplim 1/3*suplim+5000 1/3*suplim+3000])
+    set(gca,'XColor', 'none','YColor','none', 'ZColor', 'none')
+
+    movievector(k) = getframe;
+    k=k+1;
 
 end
 
 % save the animated plot
 txt = input('Do you want to save the animated plot? yes/no \n', 's');
 
-if txt == 'yes'
+if strcmp(txt,'yes')
     
-    myWriter = VideoWriter('orbit_animatedplot');
+    myWriter = VideoWriter('orbitAnimata');
+    myWriter.FrameRate = (k-1)/20; % (20 seconds is the movie duration)
+
     open(myWriter);
     writeVideo(myWriter, movievector);
     close(myWriter)

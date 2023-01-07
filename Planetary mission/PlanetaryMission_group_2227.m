@@ -16,6 +16,9 @@
     - Giuseppe Brentino
     - Roberto Pistone Nascone
 
+    Notes: for generating also animated plot of the orbit 
+           uncomment lines 559-568
+
 %}
 
 clc; clearvars; close all;
@@ -54,7 +57,7 @@ theta_G0 = 0;
 t_span = 300;
 
 plot_style;
-saveplots = input('Do you want to save the plots ("yes" or "no")? ', 's');
+saveplots = input('Do you want to generate animated plots ("yes" or "no")? ', 's');
 
 %% Nominal GT for different orbit periods
 settings.perturbations = false;
@@ -88,7 +91,7 @@ settings.perturbations = false;
 
 GT_1_orbit = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_1_orbit)
-title('Nominal groundtrack, 1 orbit')
+title('Nominal ground track, 1 orbit')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -96,11 +99,11 @@ ylabel('Latitude [deg]')
 plot(lon_1, lat_1, 'r');
 plot(lon_1(1), lat_1(1), 'o', 'Color', '#EDB120', 'MarkerSize', 12);
 plot(lon_1(end), lat_1(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
-legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
+legend('ground track', 'initial position', 'final position', 'Location','northeast')
 
 GT_24h = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_24h)
-title('Nominal groundtrack, 24 hours')
+title('Nominal ground track, 24 hours')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -108,11 +111,11 @@ ylabel('Latitude [deg]')
 plot(lon_24, lat_24, 'r');
 plot(lon_24(1), lat_24(1), 'o', 'Color', '#EDB120','MarkerSize', 12);
 plot(lon_24(end), lat_24(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
-legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
+legend('ground track', 'initial position', 'final position', 'Location','northeast')
 
 GT_10_day = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_10_day)
-title('Nominal groundtrack, 10 days')
+title('Nominal ground track, 10 days')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -120,11 +123,11 @@ ylabel('Latitude [deg]')
 plot(lon_10, lat_10, 'r');
 plot(lon_10(1), lat_10(1), 'o', 'Color', '#EDB120', 'MarkerSize', 12);
 plot(lon_10(end), lat_10(end), '*', 'Color', '#EDB120', 'MarkerSize', 12);
-legend('groundtrack', 'initial position', 'final position', 'Location','northeast')
+legend('ground track', 'initial position', 'final position', 'Location','northeast')
 
 GT_modified = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_modified)
-title('Nominal and Modified groundtracks, 4 days')
+title('Nominal and Modified ground tracks, 4 days')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -142,7 +145,7 @@ legend('nominal ground track', 'nominal orbit initial position', ...
 
 GT_pert = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_pert)
-title('Perturbed and Nominal groundtracks, 24 hour orbit')
+title('Perturbed and Nominal ground tracks, 24 hour orbit')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -159,7 +162,7 @@ legend('perturbed gt', 'initial perturbed position', ...
 
 GT_pert_and_mod = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 groundTrackPlot(GT_pert_and_mod)
-title('Perturbed and Modified groundtracks, 13 orbits')
+title('Perturbed and Modified ground tracks, 13 orbits')
 xlim([-180 180]);
 ylim([-90 90]);
 xlabel('Longitude [deg]')
@@ -276,25 +279,6 @@ end
 %% Filtering
 kep_filterT = movmean(kep_pert, t_span);
 kep_filter400T = movmean(kep_pert, t_span*470);
-
-%% Validation
-% Theoretical value for J2 perturbations
-dOM_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
-    cos(keplerian.i)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
-dom_theoretical = -(3/2*sqrt(settings.mu)*settings.J2E*settings.RE^2*...
-    (5/2*sin(keplerian.i)^2-2)/((1-keplerian.e^2)^2*keplerian.a^(7/2)));
-
-% Keplerian elements rate of change in our model
-da_model = polyfit(t_pert(t_span*5:t_span*1995), kep_filterT(t_span*5:t_span*1995,1), 1);
-da_model = da_model(1);
-de_model = polyfit(t_pert(t_span*5:t_span*1995), kep_filterT(t_span*5:t_span*1995,2), 1);
-de_model = de_model(1);
-di_model = polyfit(t_pert(t_span*300:t_span*1700), deg2rad(kep_filter400T(t_span*300:t_span*1700,3)), 1);
-di_model = di_model(1);
-dOM_model = polyfit(t_pert(t_span*5:t_span*1995), deg2rad(kep_filterT(t_span*5:t_span*1995,4)), 1);
-dOM_model = dOM_model(1);
-dom_model = polyfit(t_pert(t_span*5:t_span*1995), deg2rad(kep_filterT(t_span*5:t_span*1995,5)), 1);
-dom_model = dom_model(1);
 
 %% Figures
 
@@ -476,19 +460,20 @@ drag_SC.c_d = 2.1;                              % drag coefficient [-]
 drag_SC.Area_mass = (1.8*1.8+4*0.9*0.9) /647.6; % ratio between reference area and mass [m^2/kg]
 
 T_SC = 2*pi*sqrt(a_SC^3/settings.mu);
-
-Time = 40*T_SC;
+t_span_SC=300;
+Time = 0:T_SC/t_span_SC:40*T_SC;
 
 options = odeset('RelTol', 1e-13,'AbsTol',1e-14 );
 settings.perturbations = true;
-[t_SC_kep, kep_SC]=ode113(@GaussEq_rsw, [0 Time], kep0_SC, options, settings, drag_SC);
+[t_SC_kep, kep_SC]=ode113(@GaussEq_rsw, Time, kep0_SC, options, settings, drag_SC);
 
 for j=1:length(t_SC_kep)
     kep_SC(j, 3:6) = [rad2deg(kep_SC(j,3)), rad2deg(kep_SC(j,4)), ...
         rad2deg(kep_SC(j,5)), rad2deg(wrapTo2Pi(kep_SC(j,6)))];
 end
 
-% Comparison for 10 days (plots)
+% Comparison for 10 days (plots keplerian elements)
+
 plot_realSC_10 = figure('Units','normalized', 'OuterPosition',[0 0 1 1]);
 
 subplot(3, 2, 1)
@@ -552,17 +537,21 @@ ylabel('$\vartheta$ [deg]');
 legend;
 
 %% Save plots
+
 if strcmp(saveplots, 'yes')
-    mkdir('plots/');
-    exportgraphics(GT_1_orbit, '.\plots\GT_1_orbit.eps', 'ContentType','vector');
-    exportgraphics(GT_24h, '.\plots\GT_24h.eps', 'ContentType','vector');
-    exportgraphics(GT_10_day, '.\plots\GT_10_day.eps', 'ContentType','vector');
-    exportgraphics(GT_modified, '.\plots\GT_modified.eps', 'ContentType','vector');
-    exportgraphics(GT_pert, '.\plots\GT_pert.eps', 'ContentType','vector');
-    exportgraphics(GT_pert_and_mod, '.\plots\GT_pert_and_mod.eps', 'ContentType','vector');
-    exportgraphics(Plot_errors, '.\plots\Plot_errors.eps', 'ContentType','vector');
-    exportgraphics(filtering_10T, '.\plots\filtering_10T.eps', 'ContentType','vector');
-    exportgraphics(filtering_2000T, '.\plots\filtering_2000T.eps', 'ContentType','vector');
-    exportgraphics(plot_realSC_10, '.\plots\plot_realSC_10.eps', 'ContentType','vector');
+
+    % perigee precession
+    pov = [90, 90];
+    n_orbit=1801;
+    film1 = animated_plot(Y_pert(:,1), Y_pert(:,2), Y_pert(:,3), T, n_orbit, 1, t_span, pov, false);
+
+    % nodal regression
+    pov = [90, 15];
+    n_orbit=1801;
+    film2 = animated_plot(Y_pert(:,1), Y_pert(:,2), Y_pert(:,3), T, n_orbit, 1, t_span, pov, true);
 
 end
+
+
+
+
